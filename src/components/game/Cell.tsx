@@ -1,0 +1,96 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import type { CellState, Position } from '@/types/game';
+
+interface CellProps {
+  state: CellState;
+  position: Position;
+  onClick?: () => void;
+  disabled?: boolean;
+  isHighlighted?: boolean;
+  isOpponentBoard?: boolean;
+}
+
+/**
+ * ゲームボードのセルコンポーネント
+ * セルの状態に応じた表示とクリックイベントを処理
+ *
+ * Props:
+ * - state: セルの状態（empty, ship, hit, miss）
+ * - position: セルの位置
+ * - onClick: クリック時のコールバック
+ * - disabled: クリック無効化
+ * - isHighlighted: ハイライト表示（スキル使用時など）
+ * - isOpponentBoard: 相手のボードかどうか
+ */
+export default function Cell({
+  state,
+  position,
+  onClick,
+  disabled = false,
+  isHighlighted = false,
+  isOpponentBoard = false,
+}: CellProps) {
+  const getCellClassName = (): string => {
+    const baseClass = 'w-8 h-8 md:w-10 md:h-10 rounded transition-all flex items-center justify-center text-lg';
+
+    // ハイライト
+    if (isHighlighted) {
+      return `${baseClass} bg-yellow-300 border-2 border-yellow-500 animate-pulse`;
+    }
+
+    // 状態別スタイル
+    switch (state) {
+      case 'empty':
+        return `${baseClass} bg-blue-200 hover:bg-blue-300 ${!disabled && onClick ? 'cursor-pointer' : 'cursor-default'}`;
+
+      case 'ship':
+        return `${baseClass} bg-pink-400 ${!disabled && onClick ? 'cursor-pointer hover:bg-pink-500' : 'cursor-default'}`;
+
+      case 'hit':
+        return `${baseClass} bg-red-500 cursor-default`;
+
+      case 'miss':
+        return `${baseClass} bg-gray-400 cursor-default`;
+
+      default:
+        return `${baseClass} bg-blue-200`;
+    }
+  };
+
+  const getCellContent = (): string => {
+    switch (state) {
+      case 'hit':
+        return '💥';
+      case 'miss':
+        return '○';
+      case 'ship':
+        return isOpponentBoard ? '' : '🍰'; // 相手のボードでは船を表示しない
+      default:
+        return '';
+    }
+  };
+
+  const handleClick = () => {
+    if (disabled || !onClick) return;
+
+    // 既に攻撃済みのセルはクリック不可
+    if (state === 'hit' || state === 'miss') return;
+
+    onClick();
+  };
+
+  return (
+    <motion.button
+      className={getCellClassName()}
+      onClick={handleClick}
+      disabled={disabled || state === 'hit' || state === 'miss'}
+      whileHover={!disabled && onClick && state !== 'hit' && state !== 'miss' ? { scale: 1.1 } : {}}
+      whileTap={!disabled && onClick && state !== 'hit' && state !== 'miss' ? { scale: 0.95 } : {}}
+      transition={{ duration: 0.1 }}
+      aria-label={`Cell at row ${position.row}, column ${position.col}, state: ${state}`}
+    >
+      {getCellContent()}
+    </motion.button>
+  );
+}
