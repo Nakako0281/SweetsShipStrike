@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { motion } from 'framer-motion';
+import { useGameStore } from '@/store/gameStore';
 import type { GameMode } from '@/types/game';
 
 /**
@@ -27,6 +28,10 @@ export default function ResultPage() {
   const mode = searchParams.get('mode') as GameMode | null;
   const result = searchParams.get('result') as 'victory' | 'defeat' | null;
 
+  // ゲームストアから統計データを取得
+  const gameState = useGameStore((state) => state.gameState);
+  const resetGame = useGameStore((state) => state.resetGame);
+
   // パラメータバリデーション
   useEffect(() => {
     if (!mode || !result) {
@@ -36,13 +41,52 @@ export default function ResultPage() {
 
   const isVictory = result === 'victory';
 
+  // 統計データの計算
+  const stats = useMemo(() => {
+    if (!gameState) {
+      return {
+        hitCount: 0,
+        missCount: 0,
+        skillCount: 0,
+        remainingHP: 0,
+        totalTurns: 0,
+      };
+    }
+
+    const myPlayer = gameState.players.find((p) => p.id === gameState.myPlayerId);
+    if (!myPlayer) {
+      return {
+        hitCount: 0,
+        missCount: 0,
+        skillCount: 0,
+        remainingHP: 0,
+        totalTurns: 0,
+      };
+    }
+
+    // 攻撃履歴からヒット数とミス数を計算
+    const myAttacks = gameState.turnHistory.filter((turn) => turn.playerId === gameState.myPlayerId);
+    const hitCount = myAttacks.filter((turn) => turn.result === 'hit' || turn.result === 'sunk').length;
+    const missCount = myAttacks.filter((turn) => turn.result === 'miss').length;
+
+    return {
+      hitCount,
+      missCount,
+      skillCount: myPlayer.skillsUsed.length,
+      remainingHP: myPlayer.totalHP,
+      totalTurns: gameState.turnHistory.length,
+    };
+  }, [gameState]);
+
   // タイトルへ戻る
   const handleBackToTitle = () => {
+    resetGame();
     router.push('/');
   };
 
   // もう一度対戦
   const handleRematch = () => {
+    resetGame();
     if (mode === 'cpu') {
       router.push('/character-select?mode=cpu');
     } else {
@@ -81,7 +125,7 @@ export default function ResultPage() {
           </p>
         </motion.div>
 
-        {/* 戦績サマリー（仮） */}
+        {/* 戦績サマリー */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -89,30 +133,71 @@ export default function ResultPage() {
           className="bg-purple-50 rounded-lg p-6 mb-8"
         >
           <h2 className="text-2xl font-bold text-purple-800 mb-4">戦績</h2>
-          <div className="grid grid-cols-2 gap-4 text-left">
-            <div>
-              <p className="text-sm text-purple-600 mb-1">ヒット数</p>
-              <p className="text-2xl font-bold text-pink-600">
-                {isVictory ? '14' : Math.floor(Math.random() * 10 + 5)}
+          <div className="grid grid-cols-2 gap-6 text-left">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.3 }}
+              className="bg-white rounded-lg p-4 shadow-sm"
+            >
+              <p className="text-sm text-purple-600 mb-1 flex items-center gap-2">
+                <span>💥</span> ヒット数
               </p>
-            </div>
-            <div>
-              <p className="text-sm text-purple-600 mb-1">ミス数</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {isVictory ? Math.floor(Math.random() * 15 + 5) : Math.floor(Math.random() * 20 + 10)}
+              <p className="text-3xl font-bold text-pink-600">{stats.hitCount}</p>
+            </motion.div>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.3 }}
+              className="bg-white rounded-lg p-4 shadow-sm"
+            >
+              <p className="text-sm text-purple-600 mb-1 flex items-center gap-2">
+                <span>💧</span> ミス数
               </p>
-            </div>
-            <div>
-              <p className="text-sm text-purple-600 mb-1">スキル使用回数</p>
-              <p className="text-2xl font-bold text-purple-600">0</p>
-            </div>
-            <div>
-              <p className="text-sm text-purple-600 mb-1">残りHP</p>
-              <p className="text-2xl font-bold text-pink-600">
-                {isVictory ? Math.floor(Math.random() * 10 + 3) : '0'}
+              <p className="text-3xl font-bold text-purple-600">{stats.missCount}</p>
+            </motion.div>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.3 }}
+              className="bg-white rounded-lg p-4 shadow-sm"
+            >
+              <p className="text-sm text-purple-600 mb-1 flex items-center gap-2">
+                <span>✨</span> スキル使用回数
               </p>
-            </div>
+              <p className="text-3xl font-bold text-purple-600">{stats.skillCount}</p>
+            </motion.div>
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.3 }}
+              className="bg-white rounded-lg p-4 shadow-sm"
+            >
+              <p className="text-sm text-purple-600 mb-1 flex items-center gap-2">
+                <span>❤️</span> 残りHP
+              </p>
+              <p className="text-3xl font-bold text-pink-600">{stats.remainingHP}</p>
+            </motion.div>
           </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9, duration: 0.3 }}
+            className="mt-4 pt-4 border-t border-purple-200"
+          >
+            <p className="text-sm text-purple-600">
+              総ターン数: <span className="font-bold text-purple-800">{stats.totalTurns}</span>
+            </p>
+            <p className="text-sm text-purple-600 mt-1">
+              命中率:{' '}
+              <span className="font-bold text-pink-600">
+                {stats.hitCount + stats.missCount > 0
+                  ? ((stats.hitCount / (stats.hitCount + stats.missCount)) * 100).toFixed(1)
+                  : '0.0'}
+                %
+              </span>
+            </p>
+          </motion.div>
         </motion.div>
 
         {/* 獲得コイン（MVP拡張版用、仮表示） */}
