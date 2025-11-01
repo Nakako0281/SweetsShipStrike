@@ -23,7 +23,7 @@ export default function ModeSelectPage() {
   };
 
   const handleCpuBattle = () => {
-    router.push('/character-select?mode=cpu');
+    router.push('/cpu-difficulty');
   };
 
   const handleBack = () => {
