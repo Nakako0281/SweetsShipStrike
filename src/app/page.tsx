@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
+import { useUIStore } from '@/store/uiStore';
+import { useSound } from '@/hooks/useSound';
 
 /**
  * タイトル画面
@@ -20,11 +22,28 @@ export default function TitlePage() {
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  // UIストア
+  const soundEnabled = useUIStore((state) => state.soundEnabled);
+  const bgmEnabled = useUIStore((state) => state.bgmEnabled);
+  const toggleSound = useUIStore((state) => state.toggleSound);
+  const toggleBGM = useUIStore((state) => state.toggleBGM);
+
+  // サウンド
+  const { playSE, playBGM } = useSound();
+
+  // BGM自動再生
+  useEffect(() => {
+    // タイトル画面BGMを再生（実際の音声ファイルがあれば）
+    // playBGM('title');
+  }, [playBGM]);
+
   const handleStart = () => {
+    playSE('button');
     router.push('/mode-select');
   };
 
   const handleSettings = () => {
+    playSE('button');
     setIsSettingsOpen(true);
   };
 
@@ -76,27 +95,40 @@ export default function TitlePage() {
         onClose={() => setIsSettingsOpen(false)}
         title="設定"
       >
-        <div className="space-y-4">
-          <p className="text-gray-600 text-center">
-            サウンド設定機能は今後実装予定です
-          </p>
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+              <span className="text-lg font-semibold text-purple-800">BGM</span>
+              <button
+                onClick={toggleBGM}
+                className={`w-16 h-8 rounded-full transition-colors ${
+                  bgmEnabled ? 'bg-pink-500' : 'bg-gray-300'
+                }`}
+              >
+                <div
+                  className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${
+                    bgmEnabled ? 'translate-x-9' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
 
-          {/* 将来実装予定 */}
-          {/*
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              BGM音量
-            </label>
-            <input type="range" min="0" max="100" className="w-full" />
+            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+              <span className="text-lg font-semibold text-purple-800">効果音</span>
+              <button
+                onClick={toggleSound}
+                className={`w-16 h-8 rounded-full transition-colors ${
+                  soundEnabled ? 'bg-pink-500' : 'bg-gray-300'
+                }`}
+              >
+                <div
+                  className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${
+                    soundEnabled ? 'translate-x-9' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              SE音量
-            </label>
-            <input type="range" min="0" max="100" className="w-full" />
-          </div>
-          */}
 
           <div className="pt-4">
             <Button onClick={() => setIsSettingsOpen(false)} variant="primary" size="md">
