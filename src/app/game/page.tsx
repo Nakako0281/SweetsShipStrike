@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '@/hooks/useGame';
 import { useGameEffects } from '@/hooks/useGameEffects';
+import { useGameStore } from '@/store/gameStore';
 import { useUIStore } from '@/store/uiStore';
 import Board from '@/components/game/Board';
 import HUD from '@/components/game/HUD';
@@ -49,23 +50,25 @@ export default function GamePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // サウンド設定
-  const soundEnabled = useUIStore((state) => state.soundEnabled);
-  const bgmEnabled = useUIStore((state) => state.bgmEnabled);
-  const toggleSound = useUIStore((state) => state.toggleSound);
-  const toggleBGM = useUIStore((state) => state.toggleBGM);
+  const isMuted = useUIStore((state) => state.isMuted);
+  const toggleMute = useUIStore((state) => state.toggleMute);
 
   // ゲームロジック
   const {
     gameState,
-    myBoard,
-    opponentBoard,
-    myShips,
-    opponentShips,
+    localPlayerId,
     isMyTurn,
     handleAttack,
-    handleSkill,
-    surrender,
+    handleSurrender,
   } = useGame();
+  const useSkill = useGameStore((state) => state.useSkill);
+
+  // ボードと船の状態を取得
+  const myBoard = gameState && localPlayerId ? gameState.players[localPlayerId].board : [];
+  const opponentId = localPlayerId === 'player1' ? 'player2' : 'player1';
+  const opponentBoard = gameState ? gameState.players[opponentId].board : [];
+  const myShips = gameState && localPlayerId ? gameState.players[localPlayerId].ships : [];
+  const opponentShips = gameState ? gameState.players[opponentId].ships : [];
 
   // パラメータバリデーション
   useEffect(() => {
@@ -76,29 +79,14 @@ export default function GamePage() {
 
   // ゲーム終了時のリダイレクト
   useEffect(() => {
-    if (gameState?.phase === 'finished') {
-      const isVictory = gameState.winner === gameState.myPlayerId;
+    if (gameState?.phase === 'finished' && localPlayerId) {
+      const isVictory = gameState.winner === localPlayerId;
       setTimeout(() => {
         router.push(`/result?mode=${mode}&result=${isVictory ? 'victory' : 'defeat'}`);
       }, 2000);
     }
-  }, [gameState, mode, router]);
+  }, [gameState, mode, router, localPlayerId]);
 
-  // 降参処理
-  const handleSurrender = () => {
-    addNotification({
-      type: 'warning',
-      message: '降参しますか？',
-    });
-
-    if (confirm('降参しますか？')) {
-      surrender();
-      addNotification({
-        type: 'info',
-        message: '降参しました',
-      });
-    }
-  };
 
   // 攻撃ハンドラー
   const handleCellClick = (position: Position) => {
@@ -133,14 +121,14 @@ export default function GamePage() {
         </button>
 
         {/* HUD */}
-        <HUD
-          isMyTurn={isMyTurn()}
-          myHP={gameState.players.find((p) => p.id === gameState.myPlayerId)?.totalHP || 0}
-          opponentHP={gameState.players.find((p) => p.id !== gameState.myPlayerId)?.totalHP || 0}
-          myShipCount={myShips.filter((s) => !s.isSunk).length}
-          opponentShipCount={opponentShips.filter((s) => !s.isSunk).length}
-          skillsUsed={gameState.players.find((p) => p.id === gameState.myPlayerId)?.skillsUsed || []}
-        />
+        {gameState && localPlayerId && (
+          <HUD
+            player={gameState.players[localPlayerId]}
+            opponent={gameState.players[opponentId]}
+            isPlayerTurn={isMyTurn}
+            turnCount={gameState.turnCount}
+          />
+        )}
       </motion.div>
 
       {/* メインコンテンツ */}
@@ -158,10 +146,9 @@ export default function GamePage() {
               <div className="relative">
                 <Board
                   board={opponentBoard}
-                  ships={[]} // 相手の船は表示しない
+                  isOpponentBoard={true}
                   onCellClick={handleCellClick}
-                  isInteractive={isMyTurn()}
-                  showShips={false}
+                  disabled={!isMyTurn}
                 />
                 {/* 攻撃エフェクト */}
                 {effects.map((effect) => {
@@ -188,15 +175,11 @@ export default function GamePage() {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-2xl font-bold text-purple-800 mb-4">スキル</h2>
               <SkillPanel
-                ships={myShips}
-                onSkillClick={(skillId) => {
-                  const ship = myShips.find((s) => s.skill.id === skillId);
-                  if (ship) {
-                    setSelectedSkill(ship);
-                    setIsSkillModalOpen(true);
-                  }
+                availableSkills={[]}
+                onSkillClick={(skill) => {
+                  // TODO: スキル選択処理
                 }}
-                disabled={!isMyTurn()}
+                disabled={!isMyTurn}
               />
             </div>
 
@@ -224,10 +207,8 @@ export default function GamePage() {
             <h2 className="text-2xl font-bold text-purple-800 mb-4">あなたのボード</h2>
             <Board
               board={myBoard}
-              ships={myShips}
-              onCellClick={() => {}} // 自分のボードはクリック不可
-              isInteractive={false}
-              showShips={true}
+              isOpponentBoard={false}
+              disabled={true}
             />
           </div>
         </motion.div>
@@ -250,13 +231,13 @@ export default function GamePage() {
             >
               <h1
                 className={`text-6xl font-bold mb-4 ${
-                  gameState.winner === gameState.myPlayerId ? 'text-pink-600' : 'text-purple-600'
+                  gameState.winner === localPlayerId ? 'text-pink-600' : 'text-purple-600'
                 }`}
               >
-                {gameState.winner === gameState.myPlayerId ? '勝利！' : '敗北...'}
+                {gameState.winner === localPlayerId ? '勝利！' : '敗北...'}
               </h1>
               <p className="text-2xl text-purple-700 mb-6">
-                {gameState.winner === gameState.myPlayerId
+                {gameState.winner === localPlayerId
                   ? 'おめでとうございます！'
                   : 'また挑戦してください！'}
               </p>
@@ -274,11 +255,12 @@ export default function GamePage() {
         opponentBoard={opponentBoard}
         onExecuteSkill={(position) => {
           if (selectedSkill) {
-            handleSkill(selectedSkill.skill.id, position);
+            useSkill(selectedSkill.id, position);
             addNotification({
               type: 'success',
-              message: `${selectedSkill.name}のスキルを使用しました！`,
+              message: `スキルを使用しました！`,
             });
+            setIsSkillModalOpen(false);
           }
         }}
       />
@@ -288,32 +270,16 @@ export default function GamePage() {
         <div className="space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-              <span className="text-lg font-semibold text-purple-800">BGM</span>
+              <span className="text-lg font-semibold text-purple-800">サウンド</span>
               <button
-                onClick={toggleBGM}
+                onClick={toggleMute}
                 className={`w-16 h-8 rounded-full transition-colors ${
-                  bgmEnabled ? 'bg-pink-500' : 'bg-gray-300'
+                  !isMuted ? 'bg-pink-500' : 'bg-gray-300'
                 }`}
               >
                 <div
                   className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${
-                    bgmEnabled ? 'translate-x-9' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-              <span className="text-lg font-semibold text-purple-800">効果音</span>
-              <button
-                onClick={toggleSound}
-                className={`w-16 h-8 rounded-full transition-colors ${
-                  soundEnabled ? 'bg-pink-500' : 'bg-gray-300'
-                }`}
-              >
-                <div
-                  className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${
-                    soundEnabled ? 'translate-x-9' : 'translate-x-1'
+                    !isMuted ? 'translate-x-9' : 'translate-x-1'
                   }`}
                 />
               </button>

@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
-import type { CPUDifficulty } from '@/types/game';
+
+type CPUDifficulty = 'easy' | 'normal' | 'hard';
 
 /**
  * CPU難易度選択画面

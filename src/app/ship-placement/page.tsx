@@ -9,7 +9,8 @@ import Board from '@/components/game/Board';
 import { useGameStore } from '@/store/gameStore';
 import { useUIStore } from '@/store/uiStore';
 import { createEmptyBoard, canPlaceShip, placeShip, randomPlaceShips } from '@/lib/game/board';
-import { SHIPS, BOARD_SIZE, SETUP_TIMER_SECONDS } from '@/lib/utils/constants';
+import { BOARD_SIZE, SETUP_TIMER_SECONDS } from '@/lib/utils/constants';
+import { SHIPS } from '@/lib/game/ships';
 import type { CharacterType, GameMode, Ship, Position, Board as BoardType } from '@/types/game';
 
 export default function ShipPlacementPage() {

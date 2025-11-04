@@ -31,22 +31,15 @@ export default function Board({
 }: BoardProps) {
   const handleCellClick = (row: number, col: number) => {
     if (disabled || !onCellClick) return;
-    onCellClick({ row, col });
+    onCellClick({ x: col, y: row });
   };
 
   const isCellHighlighted = (row: number, col: number): boolean => {
-    return highlightedCells.some((pos) => pos.row === row && pos.col === col);
+    return highlightedCells.some((pos) => pos.x === col && pos.y === row);
   };
 
   const getCellState = (row: number, col: number): CellState => {
-    const cell = board[row][col];
-
-    // 相手のボードの場合、未攻撃の船は見えない
-    if (isOpponentBoard && cell.state === 'ship') {
-      return 'empty';
-    }
-
-    return cell.state;
+    return board[row]?.[col] || 'empty';
   };
 
   return (
@@ -73,11 +66,11 @@ export default function Board({
           </div>
 
           {/* セル */}
-          {row.map((cell, colIndex) => (
+          {row.map((_, colIndex) => (
             <Cell
               key={`cell-${rowIndex}-${colIndex}`}
               state={getCellState(rowIndex, colIndex)}
-              position={{ row: rowIndex, col: colIndex }}
+              position={{ x: colIndex, y: rowIndex }}
               onClick={() => handleCellClick(rowIndex, colIndex)}
               disabled={disabled}
               isHighlighted={isCellHighlighted(rowIndex, colIndex)}
