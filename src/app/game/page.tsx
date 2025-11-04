@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '@/hooks/useGame';
+import { useGameEffects } from '@/hooks/useGameEffects';
 import { useUIStore } from '@/store/uiStore';
 import Board from '@/components/game/Board';
 import HUD from '@/components/game/HUD';
@@ -11,6 +12,9 @@ import ShipList from '@/components/game/ShipList';
 import SkillPanel from '@/components/game/SkillPanel';
 import Button from '@/components/ui/Button';
 import Notification from '@/components/ui/Notification';
+import HitEffect from '@/components/effects/HitEffect';
+import MissEffect from '@/components/effects/MissEffect';
+import SinkEffect from '@/components/effects/SinkEffect';
 import type { CharacterType, GameMode, Position } from '@/types/game';
 
 /**
@@ -33,6 +37,9 @@ export default function GamePage() {
 
   // UIストア
   const addNotification = useUIStore((state) => state.addNotification);
+
+  // エフェクト管理
+  const { effects, addEffect } = useGameEffects();
 
   // ゲームロジック
   const {
@@ -127,13 +134,25 @@ export default function GamePage() {
           >
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-2xl font-bold text-purple-800 mb-4">相手のボード</h2>
-              <Board
-                board={opponentBoard}
-                ships={[]} // 相手の船は表示しない
-                onCellClick={handleCellClick}
-                isInteractive={isMyTurn()}
-                showShips={false}
-              />
+              <div className="relative">
+                <Board
+                  board={opponentBoard}
+                  ships={[]} // 相手の船は表示しない
+                  onCellClick={handleCellClick}
+                  isInteractive={isMyTurn()}
+                  showShips={false}
+                />
+                {/* 攻撃エフェクト */}
+                {effects.map((effect) => {
+                  const Component =
+                    effect.type === 'hit'
+                      ? HitEffect
+                      : effect.type === 'miss'
+                      ? MissEffect
+                      : SinkEffect;
+                  return <Component key={effect.id} position={effect.position} />;
+                })}
+              </div>
             </div>
           </motion.div>
 
