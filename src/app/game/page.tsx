@@ -12,6 +12,7 @@ import ShipList from '@/components/game/ShipList';
 import SkillPanel from '@/components/game/SkillPanel';
 import SkillModal from '@/components/game/SkillModal';
 import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
 import Notification from '@/components/ui/Notification';
 import HitEffect from '@/components/effects/HitEffect';
 import MissEffect from '@/components/effects/MissEffect';
@@ -42,9 +43,16 @@ export default function GamePage() {
   // エフェクト管理
   const { effects, addEffect } = useGameEffects();
 
-  // スキルモーダル
+  // モーダル状態
   const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<Ship | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // サウンド設定
+  const soundEnabled = useUIStore((state) => state.soundEnabled);
+  const bgmEnabled = useUIStore((state) => state.bgmEnabled);
+  const toggleSound = useUIStore((state) => state.toggleSound);
+  const toggleBGM = useUIStore((state) => state.toggleBGM);
 
   // ゲームロジック
   const {
@@ -110,11 +118,19 @@ export default function GamePage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-6"
+        className="text-center mb-6 relative"
       >
         <h1 className="text-3xl md:text-5xl font-bold text-pink-600 mb-4 drop-shadow-lg">
           バトル中
         </h1>
+
+        {/* 設定ボタン */}
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="absolute top-0 right-4 p-2 text-purple-600 hover:text-pink-600 transition-colors"
+        >
+          <span className="text-2xl">⚙️</span>
+        </button>
 
         {/* HUD */}
         <HUD
@@ -266,6 +282,51 @@ export default function GamePage() {
           }
         }}
       />
+
+      {/* 設定モーダル */}
+      <Modal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} title="設定">
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+              <span className="text-lg font-semibold text-purple-800">BGM</span>
+              <button
+                onClick={toggleBGM}
+                className={`w-16 h-8 rounded-full transition-colors ${
+                  bgmEnabled ? 'bg-pink-500' : 'bg-gray-300'
+                }`}
+              >
+                <div
+                  className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${
+                    bgmEnabled ? 'translate-x-9' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+              <span className="text-lg font-semibold text-purple-800">効果音</span>
+              <button
+                onClick={toggleSound}
+                className={`w-16 h-8 rounded-full transition-colors ${
+                  soundEnabled ? 'bg-pink-500' : 'bg-gray-300'
+                }`}
+              >
+                <div
+                  className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${
+                    soundEnabled ? 'translate-x-9' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <Button onClick={() => setIsSettingsOpen(false)} variant="primary" size="md">
+              閉じる
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
