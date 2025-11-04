@@ -11,7 +11,9 @@ import {
   getOpponentBoardView,
 } from '@/lib/game/board';
 import { BOARD_SIZE } from '@/lib/utils/constants';
-import type { Ship, Board } from '@/types/game';
+import type { Ship, CellState } from '@/types/game';
+
+type BoardType = CellState[][];
 
 describe('Board Logic', () => {
   describe('createEmptyBoard', () => {
@@ -22,10 +24,10 @@ describe('Board Logic', () => {
       expect(board[0]).toHaveLength(BOARD_SIZE);
 
       // すべてのセルが空であることを確認
-      for (let row = 0; row < BOARD_SIZE; row++) {
-        for (let col = 0; col < BOARD_SIZE; col++) {
-          expect(board[row][col].state).toBe('empty');
-          expect(board[row][col].shipId).toBeNull();
+      for (let y = 0; y < BOARD_SIZE; y++) {
+        for (let x = 0; x < BOARD_SIZE; x++) {
+          expect(board[y][x].state).toBe('empty');
+          expect(board[y][x].shipId).toBeNull();
         }
       }
     });
@@ -37,11 +39,12 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 0, col: 0 },
+        size: 3,
+        position: { x: 0, y: 0 },
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       expect(canPlaceShip(board, ship)).toBe(true);
@@ -52,11 +55,12 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 0, col: 0 },
+        size: 3,
+        position: { x: 0, y: 0 },
         direction: 'vertical',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       expect(canPlaceShip(board, ship)).toBe(true);
@@ -67,11 +71,12 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 0, col: 8 }, // 8 + 3 = 11 > 10
+        size: 3,
+        position: { x: 8, y: 0 }, // 8 + 3 = 11 > 10
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       expect(canPlaceShip(board, ship)).toBe(false);
@@ -82,11 +87,12 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 8, col: 0 }, // 8 + 3 = 11 > 10
+        size: 3,
+        position: { x: 0, y: 8 }, // 8 + 3 = 11 > 10
         direction: 'vertical',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       expect(canPlaceShip(board, ship)).toBe(false);
@@ -97,21 +103,23 @@ describe('Board Logic', () => {
       const ship1: Ship = {
         id: 'ship1',
         type: 'strawberry_boat',
-        position: { row: 0, col: 0 },
+        size: 3,
+        position: { x: 0, y: 0 },
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       const ship2: Ship = {
         id: 'ship2',
         type: 'strawberry_boat',
-        position: { row: 0, col: 2 },
+        size: 3,
+        position: { x: 2, y: 0 },
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       const newBoard = placeShip(board, ship1)!;
@@ -125,11 +133,12 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 0, col: 0 },
+        size: 3,
+        position: { x: 0, y: 0 },
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       const newBoard = placeShip(board, ship);
@@ -146,11 +155,12 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 0, col: 8 },
+        size: 3,
+        position: { x: 8, y: 0 },
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       const newBoard = placeShip(board, ship);
@@ -163,11 +173,10 @@ describe('Board Logic', () => {
       const board = createEmptyBoard();
       const ships: Ship[] = [];
 
-      const result = processAttack(board, { row: 0, col: 0 }, ships);
+      const result = processAttack(board, ships, { x: 0, y: 0 });
 
-      expect(result.isHit).toBe(false);
-      expect(result.isSunk).toBe(false);
-      expect(result.newCellState).toBe('miss');
+      expect(result.result).toBe('miss');
+      expect(result.updatedBoard[0][0].state).toBe('miss');
     });
 
     it('should process a hit attack', () => {
@@ -175,28 +184,30 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 0, col: 0 },
+        size: 3,
+        position: { x: 0, y: 0 },
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       const newBoard = placeShip(board, ship)!;
-      const result = processAttack(newBoard, { row: 0, col: 0 }, [ship]);
+      const result = processAttack(newBoard, [ship], { x: 0, y: 0 });
 
-      expect(result.isHit).toBe(true);
-      expect(result.newCellState).toBe('hit');
+      expect(result.result).toBe('hit');
+      expect(result.updatedBoard[0][0].state).toBe('hit');
+      expect(result.updatedShips[0].hits[0]).toBe(true);
     });
 
     it('should not allow attacking already attacked cells', () => {
       const board = createEmptyBoard();
       board[0][0].state = 'hit';
 
-      const result = processAttack(board, { row: 0, col: 0 }, []);
+      const result = processAttack(board, [], { x: 0, y: 0 });
 
-      expect(result.isHit).toBe(false);
-      expect(result.newCellState).toBe('hit');
+      expect(result.result).toBe('hit');
+      expect(result.updatedBoard[0][0].state).toBe('hit');
     });
   });
 
@@ -211,11 +222,12 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 0, col: 0 },
+        size: 3,
+        position: { x: 0, y: 0 },
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       const newBoard = placeShip(board, ship)!;
@@ -227,11 +239,12 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 0, col: 0 },
+        size: 3,
+        position: { x: 0, y: 0 },
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       const newBoard = placeShip(board, ship)!;
@@ -243,20 +256,18 @@ describe('Board Logic', () => {
 
   describe('randomPlaceShips', () => {
     it('should place all 4 ships', () => {
-      const ships = randomPlaceShips();
-      expect(ships).toHaveLength(4);
+      const result = randomPlaceShips();
+      expect(result.ships).toHaveLength(4);
     });
 
     it('should create valid board from random ships', () => {
-      const ships = randomPlaceShips();
-      const board = placeShips(ships);
-      expect(board).not.toBeNull();
+      const result = randomPlaceShips();
+      expect(result.board).not.toBeNull();
     });
 
     it('should place 14 total masses', () => {
-      const ships = randomPlaceShips();
-      const board = placeShips(ships)!;
-      expect(getRemainingHP(board)).toBe(14);
+      const result = randomPlaceShips();
+      expect(getRemainingHP(result.board)).toBe(14);
     });
   });
 
@@ -266,11 +277,12 @@ describe('Board Logic', () => {
       const ship: Ship = {
         id: 'test-ship',
         type: 'strawberry_boat',
-        position: { row: 0, col: 0 },
+        size: 3,
+        position: { x: 0, y: 0 },
         direction: 'horizontal',
-        isSunk: false,
-        hp: 3,
-        maxHp: 3,
+        hits: [false, false, false],
+        sunk: false,
+        skillUsed: false,
       };
 
       const newBoard = placeShip(board, ship)!;

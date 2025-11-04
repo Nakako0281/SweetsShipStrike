@@ -1,19 +1,26 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { createEmptyBoard, placeShip, processAttack, randomPlaceShips, getRemainingHP } from '@/lib/game/board';
-import { isValidBoard, isSetupComplete } from '@/lib/game/validation';
-import { SHIPS } from '@/lib/utils/constants';
-import type { Ship, Board } from '@/types/game';
+import { isValidBoard } from '@/lib/game/validation';
+import { SHIPS } from '@/lib/game/ships';
+import type { Ship, CellState } from '@/types/game';
+
+type BoardType = CellState[][];
 
 // ゲーム終了判定（船が全て撃沈されているか）
 function isGameFinished(ships: Ship[]): boolean {
-  return ships.every((ship) => ship.isSunk);
+  return ships.every((ship) => ship.sunk);
+}
+
+// Setup完了チェック（全ての船が配置されているか）
+function isSetupComplete(ships: Ship[]): boolean {
+  return ships.length === 4;
 }
 
 describe('Game Flow Integration Tests', () => {
   describe('Complete Game Flow', () => {
-    let playerBoard: Board;
+    let playerBoard: BoardType;
     let playerShips: Ship[];
-    let opponentBoard: Board;
+    let opponentBoard: BoardType;
     let opponentShips: Ship[];
 
     beforeEach(() => {
@@ -34,7 +41,7 @@ describe('Game Flow Integration Tests', () => {
     });
 
     it('should process attacks and update board state', () => {
-      const attackPosition = { row: 0, col: 0 };
+      const attackPosition = { x: 0, y: 0 };
       const result = processAttack(opponentBoard, opponentShips, attackPosition);
 
       expect(result).toBeDefined();
@@ -47,8 +54,8 @@ describe('Game Flow Integration Tests', () => {
       // すべての船を撃沈する
       const sunkShips = opponentShips.map((ship) => ({
         ...ship,
-        hp: 0,
-        isSunk: true,
+        hits: Array(ship.size).fill(true),
+        sunk: true,
       }));
 
       expect(isGameFinished(sunkShips)).toBe(true);
@@ -66,10 +73,10 @@ describe('Game Flow Integration Tests', () => {
 
       // ゲームが終了するまで攻撃を続ける（ランダム）
       while (!isGameFinished(currentShips) && turnCount < maxTurns) {
-        const row = Math.floor(Math.random() * 10);
-        const col = Math.floor(Math.random() * 10);
+        const x = Math.floor(Math.random() * 10);
+        const y = Math.floor(Math.random() * 10);
 
-        const result = processAttack(currentBoard, currentShips, { row, col });
+        const result = processAttack(currentBoard, currentShips, { x, y });
         currentBoard = result.updatedBoard;
         currentShips = result.updatedShips;
 
@@ -81,7 +88,7 @@ describe('Game Flow Integration Tests', () => {
 
       // もしゲームが終了していれば、すべての船が撃沈されているはず
       if (isGameFinished(currentShips)) {
-        expect(currentShips.every((ship) => ship.isSunk)).toBe(true);
+        expect(currentShips.every((ship) => ship.sunk)).toBe(true);
       }
     });
   });
@@ -98,20 +105,19 @@ describe('Game Flow Integration Tests', () => {
         const maxAttempts = 100;
 
         while (!placed && attempts < maxAttempts) {
-          const row = Math.floor(Math.random() * 10);
-          const col = Math.floor(Math.random() * 10);
-          const orientation = Math.random() > 0.5 ? 'horizontal' : 'vertical';
+          const x = Math.floor(Math.random() * 10);
+          const y = Math.floor(Math.random() * 10);
+          const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
 
           const ship: Ship = {
-            id: shipDef.id,
-            name: shipDef.name,
+            id: `test_${shipDef.id}`,
+            type: shipDef.id,
             size: shipDef.size,
-            position: { row, col },
-            orientation: orientation as 'horizontal' | 'vertical',
-            hp: shipDef.size,
-            maxHp: shipDef.size,
-            isSunk: false,
-            skill: shipDef.skill,
+            position: { x, y },
+            direction: direction as 'horizontal' | 'vertical',
+            hits: Array(shipDef.size).fill(false),
+            sunk: false,
+            skillUsed: false,
           };
 
           const newBoard = placeShip(board, ship);
@@ -137,7 +143,7 @@ describe('Game Flow Integration Tests', () => {
       const { board, ships } = randomPlaceShips();
 
       // 同じ位置への連続攻撃
-      const pos = { row: 5, col: 5 };
+      const pos = { x: 5, y: 5 };
       const result1 = processAttack(board, ships, pos);
       const result2 = processAttack(result1.updatedBoard, result1.updatedShips, pos);
 
@@ -151,16 +157,16 @@ describe('Game Flow Integration Tests', () => {
       let currentShips = ships;
 
       // すべてのセルを攻撃
-      for (let row = 0; row < 10; row++) {
-        for (let col = 0; col < 10; col++) {
-          const result = processAttack(currentBoard, currentShips, { row, col });
+      for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {
+          const result = processAttack(currentBoard, currentShips, { x, y });
           currentBoard = result.updatedBoard;
           currentShips = result.updatedShips;
         }
       }
 
       // すべての船が撃沈されているはず
-      expect(currentShips.every((ship) => ship.isSunk)).toBe(true);
+      expect(currentShips.every((ship) => ship.sunk)).toBe(true);
       expect(isGameFinished(currentShips)).toBe(true);
     });
   });

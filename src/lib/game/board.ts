@@ -1,7 +1,6 @@
 import { BOARD_SIZE } from '@/lib/utils/constants';
 import { SHIP_DEFINITIONS } from '@/lib/game/ships';
 import type {
-  Board,
   CellState,
   Position,
   Ship,
@@ -9,6 +8,14 @@ import type {
   Direction,
   AttackResult,
 } from '@/types/game';
+
+/** 内部的なセル型（shipIdを保持） */
+export interface Cell {
+  state: CellState;
+  shipId: string | null;
+}
+
+export type Board = Cell[][];
 
 /**
  * ボード管理ロジック
@@ -36,22 +43,22 @@ export function createEmptyBoard(): Board {
 export function canPlaceShip(board: Board, ship: Ship): boolean {
   const { position, direction, type } = ship;
   const shipDef = SHIP_DEFINITIONS[type];
-  const { row, col } = position;
+  const { x, y } = position;
 
   // ボード外チェック
-  if (direction === 'horizontal' && col + shipDef.size > BOARD_SIZE) {
+  if (direction === 'horizontal' && x + shipDef.size > BOARD_SIZE) {
     return false;
   }
-  if (direction === 'vertical' && row + shipDef.size > BOARD_SIZE) {
+  if (direction === 'vertical' && y + shipDef.size > BOARD_SIZE) {
     return false;
   }
 
   // 重複チェック
   for (let i = 0; i < shipDef.size; i++) {
-    const checkRow = direction === 'vertical' ? row + i : row;
-    const checkCol = direction === 'horizontal' ? col + i : col;
+    const checkY = direction === 'vertical' ? y + i : y;
+    const checkX = direction === 'horizontal' ? x + i : x;
 
-    if (board[checkRow][checkCol].state !== 'empty') {
+    if (board[checkY][checkX].state !== 'empty') {
       return false;
     }
   }
@@ -72,13 +79,13 @@ export function placeShip(board: Board, ship: Ship): Board | null {
 
   const newBoard = board.map((row) => row.map((cell) => ({ ...cell })));
   const shipDef = SHIP_DEFINITIONS[ship.type];
-  const { row, col } = ship.position;
+  const { x, y } = ship.position;
 
   for (let i = 0; i < shipDef.size; i++) {
-    const targetRow = ship.direction === 'vertical' ? row + i : row;
-    const targetCol = ship.direction === 'horizontal' ? col + i : col;
+    const targetY = ship.direction === 'vertical' ? y + i : y;
+    const targetX = ship.direction === 'horizontal' ? x + i : x;
 
-    newBoard[targetRow][targetCol] = {
+    newBoard[targetY][targetX] = {
       state: 'ship',
       shipId: ship.id,
     };
@@ -115,31 +122,35 @@ export function placeShips(ships: Ship[]): Board | null {
  */
 export function processAttack(
   board: Board,
-  position: Position,
-  ships: Ship[]
-): AttackResult {
-  const { row, col } = position;
-  const cell = board[row][col];
+  ships: Ship[],
+  position: Position
+): {
+  result: 'hit' | 'miss' | 'sunk';
+  updatedBoard: Board;
+  updatedShips: Ship[];
+} {
+  const { x, y } = position;
+  const cell = board[y][x];
+
+  // 新しいボードを作成
+  const updatedBoard = board.map((row) => row.map((c) => ({ ...c })));
 
   // 既に攻撃済み
   if (cell.state === 'hit' || cell.state === 'miss') {
     return {
-      position,
-      isHit: false,
-      isSunk: false,
-      sunkShipId: null,
-      newCellState: cell.state,
+      result: cell.state === 'hit' ? 'hit' : 'miss',
+      updatedBoard: board,
+      updatedShips: ships,
     };
   }
 
   // ミス
   if (cell.state === 'empty') {
+    updatedBoard[y][x].state = 'miss';
     return {
-      position,
-      isHit: false,
-      isSunk: false,
-      sunkShipId: null,
-      newCellState: 'miss',
+      result: 'miss',
+      updatedBoard,
+      updatedShips: ships,
     };
   }
 
@@ -149,24 +160,46 @@ export function processAttack(
 
   if (!targetShip) {
     // 船が見つからない場合はミス扱い
+    updatedBoard[y][x].state = 'miss';
     return {
-      position,
-      isHit: false,
-      isSunk: false,
-      sunkShipId: null,
-      newCellState: 'miss',
+      result: 'miss',
+      updatedBoard,
+      updatedShips: ships,
     };
   }
 
+  // ボードを更新
+  updatedBoard[y][x].state = 'hit';
+
+  // 船のhits配列を更新
+  const updatedShips = ships.map((ship) => {
+    if (ship.id !== shipId) return ship;
+
+    // どの位置がヒットしたか計算
+    const { x: shipX, y: shipY } = ship.position;
+    const hitIndex =
+      ship.direction === 'horizontal' ? x - shipX : y - shipY;
+
+    const newHits = [...ship.hits];
+    newHits[hitIndex] = true;
+
+    const allHit = newHits.every((h) => h);
+
+    return {
+      ...ship,
+      hits: newHits,
+      sunk: allHit,
+    };
+  });
+
   // 船が沈んだかチェック
-  const isSunk = isShipSunk(board, targetShip);
+  const updatedShip = updatedShips.find((s) => s.id === shipId)!;
+  const isSunk = updatedShip.sunk;
 
   return {
-    position,
-    isHit: true,
-    isSunk,
-    sunkShipId: isSunk ? shipId : null,
-    newCellState: 'hit',
+    result: isSunk ? 'sunk' : 'hit',
+    updatedBoard,
+    updatedShips,
   };
 }
 
@@ -178,14 +211,14 @@ export function processAttack(
  */
 export function isShipSunk(board: Board, ship: Ship): boolean {
   const shipDef = SHIP_DEFINITIONS[ship.type];
-  const { row, col } = ship.position;
+  const { x, y } = ship.position;
 
   for (let i = 0; i < shipDef.size; i++) {
-    const checkRow = ship.direction === 'vertical' ? row + i : row;
-    const checkCol = ship.direction === 'horizontal' ? col + i : col;
+    const checkY = ship.direction === 'vertical' ? y + i : y;
+    const checkX = ship.direction === 'horizontal' ? x + i : x;
 
     // まだヒットしていない部分があれば沈んでいない
-    if (board[checkRow][checkCol].state !== 'hit') {
+    if (board[checkY][checkX].state !== 'hit') {
       return false;
     }
   }
@@ -211,9 +244,9 @@ export function areAllShipsSunk(board: Board, ships: Ship[]): boolean {
 export function getRemainingHP(board: Board): number {
   let hp = 0;
 
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      if (board[row][col].state === 'ship') {
+  for (let y = 0; y < BOARD_SIZE; y++) {
+    for (let x = 0; x < BOARD_SIZE; x++) {
+      if (board[y][x].state === 'ship') {
         hp++;
       }
     }
@@ -224,9 +257,9 @@ export function getRemainingHP(board: Board): number {
 
 /**
  * ランダムに船を配置
- * @returns 配置された船の配列
+ * @returns 配置された船の配列とボード
  */
-export function randomPlaceShips(): Ship[] {
+export function randomPlaceShips(): { board: Board; ships: Ship[] } {
   const shipTypes = Object.keys(SHIP_DEFINITIONS) as ShipType[];
   const ships: Ship[] = [];
   let attempts = 0;
@@ -241,22 +274,23 @@ export function randomPlaceShips(): Ship[] {
       const direction: Direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
       const shipDef = SHIP_DEFINITIONS[shipType];
 
-      const maxRow =
+      const maxY =
         direction === 'vertical' ? BOARD_SIZE - shipDef.size : BOARD_SIZE - 1;
-      const maxCol =
+      const maxX =
         direction === 'horizontal' ? BOARD_SIZE - shipDef.size : BOARD_SIZE - 1;
 
-      const row = Math.floor(Math.random() * (maxRow + 1));
-      const col = Math.floor(Math.random() * (maxCol + 1));
+      const y = Math.floor(Math.random() * (maxY + 1));
+      const x = Math.floor(Math.random() * (maxX + 1));
 
       const ship: Ship = {
         id: `${shipType}_${Date.now()}_${Math.random()}`,
         type: shipType,
-        position: { row, col },
+        size: shipDef.size,
+        position: { x, y },
         direction,
-        isSunk: false,
-        hp: shipDef.size,
-        maxHp: shipDef.size,
+        hits: Array(shipDef.size).fill(false),
+        sunk: false,
+        skillUsed: false,
       };
 
       const tempBoard = placeShips([...ships, ship]);
@@ -272,7 +306,13 @@ export function randomPlaceShips(): Ship[] {
     }
   }
 
-  return ships;
+  const board = placeShips(ships);
+  if (!board) {
+    // 配置失敗 - 再帰的にやり直し
+    return randomPlaceShips();
+  }
+
+  return { board, ships };
 }
 
 /**

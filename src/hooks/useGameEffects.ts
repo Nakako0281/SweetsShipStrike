@@ -17,7 +17,7 @@ export function useGameEffects() {
   const [effects, setEffects] = useState<ActiveEffect[]>([]);
 
   const addEffect = useCallback((type: EffectType, position: Position) => {
-    const id = `${type}-${position.row}-${position.col}-${Date.now()}`;
+    const id = `${type}-${position.x}-${position.y}-${Date.now()}`;
     const newEffect: ActiveEffect = { id, type, position };
 
     setEffects((prev) => [...prev, newEffect]);

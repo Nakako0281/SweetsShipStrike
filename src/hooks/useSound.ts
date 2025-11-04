@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { SoundManager } from '@/lib/sound/soundManager';
 import { useUIStore } from '@/store/uiStore';
 
@@ -7,38 +7,34 @@ import { useUIStore } from '@/store/uiStore';
  * サウンドマネージャーの初期化と操作を提供
  */
 export function useSound() {
-  const soundEnabled = useUIStore((state) => state.soundEnabled);
-  const bgmEnabled = useUIStore((state) => state.bgmEnabled);
+  const isMuted = useUIStore((state) => state.isMuted);
 
-  const soundManager = SoundManager.getInstance();
+  const soundManager = useMemo(() => new SoundManager(), []);
 
   // サウンド設定の同期
   useEffect(() => {
-    soundManager.setSEVolume(soundEnabled ? 0.7 : 0);
-  }, [soundEnabled, soundManager]);
-
-  useEffect(() => {
-    soundManager.setBGMVolume(bgmEnabled ? 0.5 : 0);
-  }, [bgmEnabled, soundManager]);
+    soundManager.setSEVolume(isMuted ? 0 : 0.7);
+    soundManager.setBGMVolume(isMuted ? 0 : 0.5);
+  }, [isMuted, soundManager]);
 
   // SEの再生
   const playSE = useCallback(
     (id: string) => {
-      if (soundEnabled) {
+      if (!isMuted) {
         soundManager.playSE(id);
       }
     },
-    [soundEnabled, soundManager]
+    [isMuted, soundManager]
   );
 
   // BGMの再生
   const playBGM = useCallback(
     (id: string, fadeIn: boolean = true) => {
-      if (bgmEnabled) {
+      if (!isMuted) {
         soundManager.playBGM(id, fadeIn);
       }
     },
-    [bgmEnabled, soundManager]
+    [isMuted, soundManager]
   );
 
   // BGM停止

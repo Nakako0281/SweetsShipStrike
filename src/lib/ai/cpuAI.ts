@@ -1,5 +1,7 @@
 import { BOARD_SIZE } from '@/lib/utils/constants';
-import type { Position, Board, CellState, CharacterType } from '@/types/game';
+import type { Position, CellState, CharacterType } from '@/types/game';
+
+type Board = CellState[][];
 
 /**
  * CPU AI ロジック
@@ -95,11 +97,12 @@ function getHardAttack(opponentBoard: Board): Position | null {
 function getAvailableCells(board: Board): Position[] {
   const available: Position[] = [];
 
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      const state = board[row][col].state;
-      if (state === 'empty' || state === 'ship') {
-        available.push({ row, col });
+  for (let y = 0; y < BOARD_SIZE; y++) {
+    for (let x = 0; x < BOARD_SIZE; x++) {
+      const state = board[y][x];
+      // 相手のボードビューでは未攻撃のセルのみ'empty'として見える
+      if (state === 'empty') {
+        available.push({ x, y });
       }
     }
   }
@@ -116,10 +119,10 @@ function findAdjacentToHit(board: Board): Position | null {
   const hitCells: Position[] = [];
 
   // ヒットしたセルを収集
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      if (board[row][col].state === 'hit') {
-        hitCells.push({ row, col });
+  for (let y = 0; y < BOARD_SIZE; y++) {
+    for (let x = 0; x < BOARD_SIZE; x++) {
+      if (board[y][x] === 'hit') {
+        hitCells.push({ x, y });
       }
     }
   }
@@ -129,8 +132,8 @@ function findAdjacentToHit(board: Board): Position | null {
     const adjacents = getAdjacentPositions(hit);
 
     for (const adj of adjacents) {
-      const state = board[adj.row][adj.col].state;
-      if (state === 'empty' || state === 'ship') {
+      const state = board[adj.y][adj.x];
+      if (state === 'empty') {
         return adj;
       }
     }
@@ -146,30 +149,30 @@ function findAdjacentToHit(board: Board): Position | null {
  */
 function findHuntTarget(board: Board): Position | null {
   // 連続ヒットを探す
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      if (board[row][col].state === 'hit') {
+  for (let y = 0; y < BOARD_SIZE; y++) {
+    for (let x = 0; x < BOARD_SIZE; x++) {
+      if (board[y][x] === 'hit') {
         // 横方向のチェック
-        if (col + 1 < BOARD_SIZE && board[row][col + 1].state === 'hit') {
+        if (x + 1 < BOARD_SIZE && board[y][x + 1] === 'hit') {
           // 右端を探す
-          if (col + 2 < BOARD_SIZE && (board[row][col + 2].state === 'empty' || board[row][col + 2].state === 'ship')) {
-            return { row, col: col + 2 };
+          if (x + 2 < BOARD_SIZE && board[y][x + 2] === 'empty') {
+            return { x: x + 2, y };
           }
           // 左端を探す
-          if (col - 1 >= 0 && (board[row][col - 1].state === 'empty' || board[row][col - 1].state === 'ship')) {
-            return { row, col: col - 1 };
+          if (x - 1 >= 0 && board[y][x - 1] === 'empty') {
+            return { x: x - 1, y };
           }
         }
 
         // 縦方向のチェック
-        if (row + 1 < BOARD_SIZE && board[row + 1][col].state === 'hit') {
+        if (y + 1 < BOARD_SIZE && board[y + 1][x] === 'hit') {
           // 下端を探す
-          if (row + 2 < BOARD_SIZE && (board[row + 2][col].state === 'empty' || board[row + 2][col].state === 'ship')) {
-            return { row: row + 2, col };
+          if (y + 2 < BOARD_SIZE && board[y + 2][x] === 'empty') {
+            return { x, y: y + 2 };
           }
           // 上端を探す
-          if (row - 1 >= 0 && (board[row - 1][col].state === 'empty' || board[row - 1][col].state === 'ship')) {
-            return { row: row - 1, col };
+          if (y - 1 >= 0 && board[y - 1][x] === 'empty') {
+            return { x, y: y - 1 };
           }
         }
       }
@@ -189,12 +192,12 @@ function findStrategicPosition(board: Board): Position | null {
   const strategicCells: Position[] = [];
 
   // チェスボードパターン（市松模様）で効率的に探索
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      if ((row + col) % 2 === 0) {
-        const state = board[row][col].state;
-        if (state === 'empty' || state === 'ship') {
-          strategicCells.push({ row, col });
+  for (let y = 0; y < BOARD_SIZE; y++) {
+    for (let x = 0; x < BOARD_SIZE; x++) {
+      if ((y + x) % 2 === 0) {
+        const state = board[y][x];
+        if (state === 'empty') {
+          strategicCells.push({ x, y });
         }
       }
     }
@@ -215,27 +218,27 @@ function findStrategicPosition(board: Board): Position | null {
  * @returns 隣接位置の配列
  */
 function getAdjacentPositions(position: Position): Position[] {
-  const { row, col } = position;
+  const { x, y } = position;
   const adjacents: Position[] = [];
 
   // 上
-  if (row - 1 >= 0) {
-    adjacents.push({ row: row - 1, col });
+  if (y - 1 >= 0) {
+    adjacents.push({ x, y: y - 1 });
   }
 
   // 下
-  if (row + 1 < BOARD_SIZE) {
-    adjacents.push({ row: row + 1, col });
+  if (y + 1 < BOARD_SIZE) {
+    adjacents.push({ x, y: y + 1 });
   }
 
   // 左
-  if (col - 1 >= 0) {
-    adjacents.push({ row, col: col - 1 });
+  if (x - 1 >= 0) {
+    adjacents.push({ x: x - 1, y });
   }
 
   // 右
-  if (col + 1 < BOARD_SIZE) {
-    adjacents.push({ row, col: col + 1 });
+  if (x + 1 < BOARD_SIZE) {
+    adjacents.push({ x: x + 1, y });
   }
 
   return adjacents;

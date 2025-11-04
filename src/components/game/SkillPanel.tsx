@@ -101,15 +101,9 @@ export default function SkillPanel({ availableSkills, onSkillClick, disabled = f
       {/* スキル使用状況 */}
       <div className="mt-4 pt-4 border-t border-purple-200">
         <div className="flex justify-between text-sm">
-          <span className="text-purple-700">使用可能:</span>
+          <span className="text-purple-700">スキル数:</span>
           <span className="font-bold text-green-600">
-            {availableSkills.filter((s) => !s.isUsed).length} / {availableSkills.length}
-          </span>
-        </div>
-        <div className="flex justify-between text-sm mt-1">
-          <span className="text-purple-700">使用済み:</span>
-          <span className="font-bold text-gray-600">
-            {availableSkills.filter((s) => s.isUsed).length} / {availableSkills.length}
+            {availableSkills.length}
           </span>
         </div>
       </div>

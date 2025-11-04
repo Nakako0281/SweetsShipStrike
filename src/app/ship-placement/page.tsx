@@ -5,15 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Notification from '@/components/ui/Notification';
-import Board from '@/components/game/Board';
+import BoardComponent from '@/components/game/Board';
 import { useGameStore } from '@/store/gameStore';
 import { useUIStore } from '@/store/uiStore';
-import { createEmptyBoard, canPlaceShip, placeShip, randomPlaceShips } from '@/lib/game/board';
+import { createEmptyBoard, canPlaceShip, placeShip, randomPlaceShips, type Board as BoardType } from '@/lib/game/board';
 import { BOARD_SIZE, SETUP_TIMER_SECONDS } from '@/lib/utils/constants';
 import { SHIPS } from '@/lib/game/ships';
 import type { CharacterType, GameMode, Ship, Position, CellState } from '@/types/game';
-
-type BoardType = CellState[][];
 
 export default function ShipPlacementPage() {
   const router = useRouter();
@@ -107,22 +105,7 @@ export default function ShipPlacementPage() {
   };
 
   const handleAutoPlace = () => {
-    const ships = randomPlaceShips();
-    const newBoard = createEmptyBoard();
-
-    // 船をボードに配置
-    ships.forEach((ship) => {
-      if (ship.position) {
-        const { x, y } = ship.position;
-        for (let i = 0; i < ship.size; i++) {
-          if (ship.direction === 'horizontal') {
-            // TODO: ボードに船の状態を設定
-          } else {
-            // TODO: ボードに船の状態を設定
-          }
-        }
-      }
-    });
+    const { board: newBoard, ships } = randomPlaceShips();
 
     setBoard(newBoard);
     setPlacedShips(ships);
@@ -170,7 +153,7 @@ export default function ShipPlacementPage() {
         <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-bold text-purple-800 mb-4">配置ボード</h2>
-            <Board board={board} onCellClick={handleCellClick} disabled={false} />
+            <BoardComponent board={board} onCellClick={handleCellClick} disabled={false} />
           </div>
         </motion.div>
 

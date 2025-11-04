@@ -2,8 +2,7 @@ import React from 'react';
 import { BOARD_SIZE } from '@/lib/utils/constants';
 import Cell from './Cell';
 import type { CellState, Position } from '@/types/game';
-
-type BoardType = CellState[][];
+import type { Board as BoardType } from '@/lib/game/board';
 
 interface BoardProps {
   board: BoardType;
@@ -41,7 +40,7 @@ export default function Board({
   };
 
   const getCellState = (row: number, col: number): CellState => {
-    return board[row]?.[col] || 'empty';
+    return board[row]?.[col]?.state || 'empty';
   };
 
   return (
