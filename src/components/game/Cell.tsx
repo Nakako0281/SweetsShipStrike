@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import type { CellState, Position } from '@/types/game';
+import type { CellState, Position, InternalCellState } from '@/types/game';
 
 interface CellProps {
-  state: CellState;
+  state: InternalCellState;
   position: Position;
   onClick?: () => void;
   disabled?: boolean;
@@ -44,6 +44,13 @@ export default function Cell({
       case 'empty':
         return `${baseClass} bg-blue-200 hover:bg-blue-300 ${!disabled && onClick ? 'cursor-pointer' : 'cursor-default'}`;
 
+      case 'ship':
+        // 相手のボードでは船を表示しない（未攻撃として扱う）
+        if (isOpponentBoard) {
+          return `${baseClass} bg-blue-200 hover:bg-blue-300 ${!disabled && onClick ? 'cursor-pointer' : 'cursor-default'}`;
+        }
+        return `${baseClass} bg-pink-400 cursor-default`;
+
       case 'hit':
         return `${baseClass} bg-red-500 cursor-default`;
 
@@ -60,6 +67,9 @@ export default function Cell({
 
   const getCellContent = (): string => {
     switch (state) {
+      case 'ship':
+        // 相手のボードでは船を表示しない
+        return isOpponentBoard ? '' : '🍓';
       case 'hit':
         return '💥';
       case 'miss':

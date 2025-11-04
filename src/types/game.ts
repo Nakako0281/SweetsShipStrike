@@ -25,8 +25,23 @@ export type ShipType =
 /** 方向 */
 export type Direction = 'horizontal' | 'vertical';
 
-/** マスの状態 */
+/** マスの状態（表示用） */
 export type CellState = 'empty' | 'miss' | 'hit' | 'sunk';
+
+/** 内部用セル状態（shipも含む） */
+export type InternalCellState = CellState | 'ship';
+
+/** ボードセル（内部ロジック用 - shipId保持） */
+export interface BoardCell {
+  state: InternalCellState;
+  shipId: string | null;
+}
+
+/** ボード型（内部ロジック用） */
+export type InternalBoard = BoardCell[][];
+
+/** 表示用ボード型 */
+export type DisplayBoard = CellState[][];
 
 /** ゲームフェーズ */
 export type GamePhase = 'setup' | 'battle' | 'finished';
@@ -145,7 +160,7 @@ export interface PlayerState {
   id: PlayerId;
   character: CharacterType;
   ships: Ship[]; // 4隻
-  board: CellState[][]; // 10x10のマス状態
+  board: InternalBoard; // 10x10のマス状態（内部ロジック用）
   hp: number; // 残体力パーセンテージ（0-100）
   remainingMasses: number; // 残存マス数
   totalMasses: number; // 総マス数（14）

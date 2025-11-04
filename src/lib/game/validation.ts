@@ -1,11 +1,11 @@
 import { BOARD_SIZE, TOTAL_MASSES } from '@/lib/utils/constants';
 import { SHIP_DEFINITIONS } from '@/lib/game/ships';
+import type { Board } from '@/lib/game/board';
 import type {
   Position,
   Ship,
   GameAction,
   GameState,
-  Board,
   PlayerId,
 } from '@/types/game';
 
@@ -20,8 +20,8 @@ import type {
  * @returns 有効ならtrue
  */
 export function isValidPosition(position: Position): boolean {
-  const { row, col } = position;
-  return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+  const { x, y } = position;
+  return y >= 0 && y < BOARD_SIZE && x >= 0 && x < BOARD_SIZE;
 }
 
 /**
@@ -62,19 +62,19 @@ export function isValidShipPlacement(ships: Ship[]): boolean {
 
   // すべての船の位置が有効かチェック
   for (const ship of ships) {
-    if (!isValidPosition(ship.position)) {
+    if (!ship.position || !isValidPosition(ship.position)) {
       return false;
     }
 
     const shipDef = SHIP_DEFINITIONS[ship.type];
-    const { row, col } = ship.position;
+    const { x, y } = ship.position;
 
     if (ship.direction === 'horizontal') {
-      if (col + shipDef.size > BOARD_SIZE) {
+      if (x + shipDef.size > BOARD_SIZE) {
         return false;
       }
     } else {
-      if (row + shipDef.size > BOARD_SIZE) {
+      if (y + shipDef.size > BOARD_SIZE) {
         return false;
       }
     }
@@ -92,13 +92,17 @@ export function hasNoShipOverlap(ships: Ship[]): boolean {
   const occupiedCells = new Set<string>();
 
   for (const ship of ships) {
+    if (!ship.position) {
+      continue; // 未配置の船はスキップ
+    }
+
     const shipDef = SHIP_DEFINITIONS[ship.type];
-    const { row, col } = ship.position;
+    const { x, y } = ship.position;
 
     for (let i = 0; i < shipDef.size; i++) {
-      const cellRow = ship.direction === 'vertical' ? row + i : row;
-      const cellCol = ship.direction === 'horizontal' ? col + i : col;
-      const cellKey = `${cellRow},${cellCol}`;
+      const cellX = ship.direction === 'horizontal' ? x + i : x;
+      const cellY = ship.direction === 'vertical' ? y + i : y;
+      const cellKey = `${cellY},${cellX}`;
 
       if (occupiedCells.has(cellKey)) {
         return false; // 重複あり
@@ -125,11 +129,11 @@ export function isValidAction(action: GameAction, gameState: GameState): boolean
 
   // ゲームフェーズのチェック
   if (gameState.phase === 'setup') {
-    return action.type === 'place_ships';
+    return action.type === 'placeShip' || action.type === 'ready';
   }
 
   if (gameState.phase === 'finished') {
-    return false; // ゲーム終了後はアクション不可
+    return action.type === 'requestRematch'; // ゲーム終了後はリマッチのみ可能
   }
 
   // アクションタイプ別のバリデーション
@@ -137,14 +141,20 @@ export function isValidAction(action: GameAction, gameState: GameState): boolean
     case 'attack':
       return isValidAttackAction(action, gameState);
 
-    case 'use_skill':
+    case 'useSkill':
       return isValidSkillAction(action, gameState);
 
-    case 'surrender':
-      return true; // 降参は常に可能
+    case 'endTurn':
+      return true; // ターン終了は常に可能
 
-    case 'place_ships':
+    case 'placeShip':
       return false; // セットアップ外では配置不可
+
+    case 'ready':
+      return false; // バトル中は準備完了不可
+
+    case 'requestRematch':
+      return false; // バトル中はリマッチ不可
 
     default:
       return false;
@@ -158,9 +168,12 @@ export function isValidAction(action: GameAction, gameState: GameState): boolean
  * @returns 有効ならtrue
  */
 function isValidAttackAction(action: GameAction, gameState: GameState): boolean {
-  if (action.type !== 'attack' || !action.position) {
+  if (action.type !== 'attack') {
     return false;
   }
+
+  const attackData = action.data as import('@/types/game').AttackActionData;
+  const position = attackData.position;
 
   // 攻撃フェーズかチェック
   if (gameState.turnPhase !== 'attack') {
@@ -168,7 +181,7 @@ function isValidAttackAction(action: GameAction, gameState: GameState): boolean 
   }
 
   // 位置が有効かチェック
-  if (!isValidPosition(action.position)) {
+  if (!isValidPosition(position)) {
     return false;
   }
 
@@ -176,8 +189,8 @@ function isValidAttackAction(action: GameAction, gameState: GameState): boolean 
   const opponentId: PlayerId = action.playerId === 'player1' ? 'player2' : 'player1';
   const opponentBoard = gameState.players[opponentId].board;
 
-  const { row, col } = action.position;
-  const cell = opponentBoard[row][col];
+  const { x, y } = position;
+  const cell = opponentBoard[y][x];
 
   // 既に攻撃済みのセルは攻撃不可
   if (cell.state === 'hit' || cell.state === 'miss') {
@@ -194,27 +207,26 @@ function isValidAttackAction(action: GameAction, gameState: GameState): boolean 
  * @returns 有効ならtrue
  */
 function isValidSkillAction(action: GameAction, gameState: GameState): boolean {
-  if (action.type !== 'use_skill' || !action.skillId) {
+  if (action.type !== 'useSkill') {
     return false;
   }
 
+  const skillData = action.data as import('@/types/game').SkillActionData;
+  const skillId = skillData.skillUse.skillId;
   const player = gameState.players[action.playerId];
 
-  // スキルが使用可能かチェック
-  const availableSkill = player.availableSkills.find((s) => s.id === action.skillId);
-  if (!availableSkill) {
-    return false;
-  }
-
-  // スキルが使用済みでないかチェック
-  if (availableSkill.isUsed) {
+  // スキルが既に使用済みかチェック
+  if (player.activeSkills.includes(skillId)) {
     return false;
   }
 
   // 位置指定が必要なスキルの場合
-  if (action.position && !isValidPosition(action.position)) {
+  const target = skillData.skillUse.target;
+  if (target && !isValidPosition(target)) {
     return false;
   }
+
+  // TODO: スキル固有のバリデーション（Week 3で実装）
 
   return true;
 }
@@ -305,10 +317,10 @@ export function isGameFinished(gameState: GameState): boolean {
     return true;
   }
 
-  // どちらかのプレイヤーのHPが0になっているかチェック
+  // どちらかのプレイヤーの残存マス数が0になっているかチェック
   for (const playerId of ['player1', 'player2'] as PlayerId[]) {
     const player = gameState.players[playerId];
-    if (player.remainingHP <= 0) {
+    if (player.remainingMasses <= 0) {
       return true;
     }
   }

@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { useUIStore } from '@/store/uiStore';
 import { getCPUAttackPosition, getDifficultyFromCharacter, getCPUThinkingTime } from '@/lib/ai/cpuAI';
+import { toDisplayBoard } from '@/lib/game/board';
 import type { Position, CharacterType, GameMode } from '@/types/game';
 
 /**
@@ -80,7 +81,8 @@ export function useGame() {
       // CPU思考時間後に攻撃
       setTimeout(() => {
         const myBoard = gameState.players[localPlayerId].board;
-        const attackPosition = getCPUAttackPosition(difficulty, myBoard, opponent.character);
+        const displayBoard = toDisplayBoard(myBoard); // CPU AIには表示用ボードを渡す
+        const attackPosition = getCPUAttackPosition(difficulty, displayBoard, opponent.character);
 
         if (attackPosition) {
           // CPUの攻撃を実行

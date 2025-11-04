@@ -1,6 +1,6 @@
 import { BOARD_SIZE } from '@/lib/utils/constants';
-import { processAttack } from '@/lib/game/board';
-import type { Position, Board, Ship, SkillResult, Area } from '@/types/game';
+import { processAttack, type Board } from '@/lib/game/board';
+import type { Position, Ship, SkillResult, Area } from '@/types/game';
 
 /**
  * スキル効果実装
@@ -17,10 +17,11 @@ import type { Position, Board, Ship, SkillResult, Area } from '@/types/game';
 export function executeStrawberryShield(playerId: string): SkillResult {
   return {
     success: true,
-    message: 'ストロベリーシールドを展開しました！次の攻撃を無効化します。',
-    affectedPositions: [],
-    // シールド状態は PlayerState の shield フラグで管理
-    // ゲームロジック側で実装
+    effect: 'ストロベリーシールドを展開しました！次の攻撃を無効化します。',
+    data: {
+      affectedPositions: [],
+      // シールド状態は PlayerState の shieldActive フラグで管理
+    }
   };
 }
 
@@ -39,14 +40,14 @@ export function executeChocolateBomb(
   opponentShips: Ship[]
 ): SkillResult {
   const affectedPositions: Position[] = [];
-  const { row, col } = centerPosition;
+  const { x, y } = centerPosition;
 
   // 3×3エリアの位置を計算
-  for (let r = row - 1; r <= row + 1; r++) {
-    for (let c = col - 1; c <= col + 1; c++) {
+  for (let cy = y - 1; cy <= y + 1; cy++) {
+    for (let cx = x - 1; cx <= x + 1; cx++) {
       // ボード内かチェック
-      if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
-        affectedPositions.push({ row: r, col: c });
+      if (cy >= 0 && cy < BOARD_SIZE && cx >= 0 && cx < BOARD_SIZE) {
+        affectedPositions.push({ x: cx, y: cy });
       }
     }
   }
@@ -56,10 +57,10 @@ export function executeChocolateBomb(
 
   // 各位置を攻撃
   for (const pos of affectedPositions) {
-    const cell = opponentBoard[pos.row][pos.col];
+    const cell = opponentBoard[pos.y][pos.x];
     if (cell.state !== 'hit' && cell.state !== 'miss') {
-      const result = processAttack(opponentBoard, pos, opponentShips);
-      if (result.isHit) {
+      const { result } = processAttack(opponentBoard, opponentShips, pos);
+      if (result === 'hit' || result === 'sunk') {
         hitCount++;
       } else {
         missCount++;
@@ -69,8 +70,8 @@ export function executeChocolateBomb(
 
   return {
     success: true,
-    message: `チョコレートボムが炸裂！${affectedPositions.length}マスを攻撃しました。（ヒット: ${hitCount}, ミス: ${missCount}）`,
-    affectedPositions,
+    effect: `チョコレートボムが炸裂！${affectedPositions.length}マスを攻撃しました。（ヒット: ${hitCount}, ミス: ${missCount}）`,
+    data: { affectedPositions, hitCount, missCount },
   };
 }
 
@@ -97,16 +98,24 @@ export function executeSweetEscape(
   if (!ship) {
     return {
       success: false,
-      message: '指定された船が見つかりません。',
-      affectedPositions: [],
+      effect: '指定された船が見つかりません。',
+      data: { affectedPositions: [] },
     };
   }
 
-  if (ship.isSunk) {
+  if (ship.sunk) {
     return {
       success: false,
-      message: '撃沈された船は移動できません。',
-      affectedPositions: [],
+      effect: '撃沈された船は移動できません。',
+      data: { affectedPositions: [] },
+    };
+  }
+
+  if (!ship.position) {
+    return {
+      success: false,
+      effect: '配置されていない船は移動できません。',
+      data: { affectedPositions: [] },
     };
   }
 
@@ -117,9 +126,11 @@ export function executeSweetEscape(
 
   return {
     success: true,
-    message: `${ship.type}を移動させました！`,
-    affectedPositions,
-    // 実際の移動処理は GameState の更新で実装
+    effect: `${ship.type}を移動させました！`,
+    data: {
+      affectedPositions,
+      // 実際の移動処理は GameState の更新で実装
+    },
   };
 }
 
@@ -140,10 +151,10 @@ export function executeWaffleScan(
 
   if (scanType === 'horizontal') {
     // 横方向の格子（0, 2, 4, 6, 8行）
-    for (let row = 0; row < BOARD_SIZE; row += 2) {
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        affectedPositions.push({ row, col });
-        const cell = opponentBoard[row][col];
+    for (let y = 0; y < BOARD_SIZE; y += 2) {
+      for (let x = 0; x < BOARD_SIZE; x++) {
+        affectedPositions.push({ x, y });
+        const cell = opponentBoard[y][x];
         if (cell.state === 'ship') {
           detectedShipCount++;
         }
@@ -151,10 +162,10 @@ export function executeWaffleScan(
     }
   } else if (scanType === 'vertical') {
     // 縦方向の格子（0, 2, 4, 6, 8列）
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      for (let col = 0; col < BOARD_SIZE; col += 2) {
-        affectedPositions.push({ row, col });
-        const cell = opponentBoard[row][col];
+    for (let y = 0; y < BOARD_SIZE; y++) {
+      for (let x = 0; x < BOARD_SIZE; x += 2) {
+        affectedPositions.push({ x, y });
+        const cell = opponentBoard[y][x];
         if (cell.state === 'ship') {
           detectedShipCount++;
         }
@@ -162,11 +173,11 @@ export function executeWaffleScan(
     }
   } else if (scanType === 'diagonal') {
     // 斜め方向の格子
-    for (let row = 0; row < BOARD_SIZE; row++) {
-      for (let col = 0; col < BOARD_SIZE; col++) {
-        if ((row + col) % 2 === 0) {
-          affectedPositions.push({ row, col });
-          const cell = opponentBoard[row][col];
+    for (let y = 0; y < BOARD_SIZE; y++) {
+      for (let x = 0; x < BOARD_SIZE; x++) {
+        if ((y + x) % 2 === 0) {
+          affectedPositions.push({ x, y });
+          const cell = opponentBoard[y][x];
           if (cell.state === 'ship') {
             detectedShipCount++;
           }
@@ -177,8 +188,8 @@ export function executeWaffleScan(
 
   return {
     success: true,
-    message: `ワッフルスキャン完了！${detectedShipCount}個の反応を検出しました。`,
-    affectedPositions,
+    effect: `ワッフルスキャン完了！${detectedShipCount}個の反応を検出しました。`,
+    data: { affectedPositions, detectedShipCount },
   };
 }
 
@@ -207,33 +218,33 @@ export function executeSkill(
   switch (skillId) {
     case 'strawberry_shield':
       if (!params.playerId) {
-        return { success: false, message: 'プレイヤーIDが必要です。', affectedPositions: [] };
+        return { success: false, effect: 'プレイヤーIDが必要です。', data: { affectedPositions: [] } };
       }
       return executeStrawberryShield(params.playerId);
 
     case 'chocolate_bomb':
       if (!params.position || !params.opponentBoard || !params.opponentShips) {
-        return { success: false, message: '位置と相手のボードが必要です。', affectedPositions: [] };
+        return { success: false, effect: '位置と相手のボードが必要です。', data: { affectedPositions: [] } };
       }
       return executeChocolateBomb(params.position, params.opponentBoard, params.opponentShips);
 
     case 'sweet_escape':
       if (!params.shipId || !params.newPosition || !params.newDirection || !params.board || !params.ships) {
-        return { success: false, message: '船ID、新しい位置、向き、ボード、船リストが必要です。', affectedPositions: [] };
+        return { success: false, effect: '船ID、新しい位置、向き、ボード、船リストが必要です。', data: { affectedPositions: [] } };
       }
       return executeSweetEscape(params.shipId, params.newPosition, params.newDirection, params.board, params.ships);
 
     case 'waffle_scan':
       if (!params.scanType || !params.opponentBoard) {
-        return { success: false, message: 'スキャンタイプと相手のボードが必要です。', affectedPositions: [] };
+        return { success: false, effect: 'スキャンタイプと相手のボードが必要です。', data: { affectedPositions: [] } };
       }
       return executeWaffleScan(params.scanType, params.opponentBoard);
 
     default:
       return {
         success: false,
-        message: `不明なスキル: ${skillId}`,
-        affectedPositions: [],
+        effect: `不明なスキル: ${skillId}`,
+        data: { affectedPositions: [] },
       };
   }
 }

@@ -1,11 +1,10 @@
 import React from 'react';
 import { BOARD_SIZE } from '@/lib/utils/constants';
 import Cell from './Cell';
-import type { CellState, Position } from '@/types/game';
-import type { Board as BoardType } from '@/lib/game/board';
+import type { CellState, Position, InternalBoard, InternalCellState } from '@/types/game';
 
 interface BoardProps {
-  board: BoardType;
+  board: InternalBoard;
   isOpponentBoard?: boolean;
   onCellClick?: (position: Position) => void;
   disabled?: boolean;
@@ -39,7 +38,7 @@ export default function Board({
     return highlightedCells.some((pos) => pos.x === col && pos.y === row);
   };
 
-  const getCellState = (row: number, col: number): CellState => {
+  const getCellState = (row: number, col: number): InternalCellState => {
     return board[row]?.[col]?.state || 'empty';
   };
 

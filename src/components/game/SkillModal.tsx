@@ -3,15 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Board from '@/components/game/Board';
 import { SHIP_DEFINITIONS } from '@/lib/game/ships';
-import type { Ship, Position, CellState } from '@/types/game';
-
-type BoardType = CellState[][];
+import type { Ship, Position, InternalBoard } from '@/types/game';
 
 interface SkillModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedSkill: Ship | null;
-  opponentBoard: BoardType;
+  opponentBoard: InternalBoard;
   onExecuteSkill: (position: Position) => void;
 }
 

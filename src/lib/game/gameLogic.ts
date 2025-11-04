@@ -46,7 +46,7 @@ export function createGame(
     gameId,
     mode,
     phase: 'setup',
-    turnPhase: 'main',
+    turnPhase: 'start',
     currentTurn: 'player1',
     players: {
       player1: {
@@ -54,23 +54,32 @@ export function createGame(
         character: player1Character,
         ships: [],
         board: createEmptyBoard(),
-        remainingHP: TOTAL_MASSES,
-        availableSkills: [],
-        usedSkills: [],
+        hp: 100,
+        remainingMasses: TOTAL_MASSES,
+        totalMasses: TOTAL_MASSES,
+        shieldActive: false,
+        activeSkills: [],
+        isReady: false,
       },
       player2: {
         id: 'player2',
         character: player2Character,
         ships: [],
         board: createEmptyBoard(),
-        remainingHP: TOTAL_MASSES,
-        availableSkills: [],
-        usedSkills: [],
+        hp: 100,
+        remainingMasses: TOTAL_MASSES,
+        totalMasses: TOTAL_MASSES,
+        shieldActive: false,
+        activeSkills: [],
+        isReady: false,
       },
+    },
+    attackedCells: {
+      player1: new Set<string>(),
+      player2: new Set<string>(),
     },
     turnCount: 0,
     winner: null,
-    history: [],
   };
 }
 
@@ -107,23 +116,7 @@ export function setupPlayerShips(
   if (isSetupComplete(newGameState)) {
     newGameState.phase = 'battle';
     newGameState.turnPhase = 'attack';
-
-    // スキルの初期化
-    for (const pid of ['player1', 'player2'] as PlayerId[]) {
-      const player = newGameState.players[pid];
-      const availableSkills = player.ships.map((ship) => {
-        const shipDef = SHIP_DEFINITIONS[ship.type];
-        return {
-          ...shipDef.skill,
-          isUsed: false,
-          shipId: ship.id,
-        };
-      });
-      newGameState.players[pid] = {
-        ...player,
-        availableSkills,
-      };
-    }
+    // activeSkills は初期状態では空配列（スキル使用時に追加される）
   }
 
   return newGameState;
@@ -151,27 +144,33 @@ export function processAction(
       newGameState = processAttackAction(newGameState, action);
       break;
 
-    case 'use_skill':
+    case 'useSkill':
       newGameState = processSkillAction(newGameState, action);
       break;
 
-    case 'surrender':
-      newGameState = processSurrenderAction(newGameState, action);
+    case 'placeShip':
+      // setupPlayerShips を使用（個別の船配置）
+      // TODO: placeShip アクションのデータ構造に合わせて実装を修正
       break;
 
-    case 'place_ships':
-      // setupPlayerShips を使用
-      if (action.ships) {
-        newGameState = setupPlayerShips(newGameState, action.playerId, action.ships);
-      }
+    case 'ready':
+      // プレイヤーの準備完了
+      newGameState.players[action.playerId].isReady = true;
+      break;
+
+    case 'endTurn':
+      // ターン終了処理
+      // TODO: ターン終了ロジックの実装
+      break;
+
+    case 'requestRematch':
+      // リマッチ要求
+      // TODO: リマッチロジックの実装
       break;
 
     default:
       throw new Error('Unknown action type');
   }
-
-  // 履歴に追加
-  newGameState.history = [...newGameState.history, action];
 
   // ゲーム終了チェック
   if (isGameFinished(newGameState)) {
@@ -191,47 +190,32 @@ function processAttackAction(
   gameState: GameState,
   action: GameAction
 ): GameState {
-  if (action.type !== 'attack' || !action.position) {
+  if (action.type !== 'attack') {
     throw new Error('Invalid attack action');
   }
+
+  const attackData = action.data as import('@/types/game').AttackActionData;
+  const position = attackData.position;
 
   const opponentId: PlayerId = action.playerId === 'player1' ? 'player2' : 'player1';
   const opponent = gameState.players[opponentId];
 
-  // 攻撃処理
-  const attackResult: AttackResult = processAttack(
+  // 攻撃処理（board.tsのprocessAttackを使用）
+  const { result, updatedBoard, updatedShips } = processAttack(
     opponent.board,
-    action.position,
-    opponent.ships
+    opponent.ships,
+    position
   );
 
-  // ボードを更新
-  const newBoard = [...opponent.board];
-  const { row, col } = action.position;
-  newBoard[row] = [...newBoard[row]];
-  newBoard[row][col] = {
-    ...newBoard[row][col],
-    state: attackResult.newCellState,
-  };
+  // 残存マス数を更新
+  const remainingMasses = getRemainingHP(updatedBoard);
 
-  // 船のHPと撃沈状態を更新
-  const newShips = opponent.ships.map((ship) => {
-    if (attackResult.isHit && ship.id === newBoard[row][col].shipId) {
-      return {
-        ...ship,
-        hp: Math.max(0, ship.hp - 1),
-        isSunk: attackResult.isSunk && ship.id === attackResult.sunkShipId,
-      };
-    }
-    return ship;
-  });
-
-  // HPを更新
-  const remainingHP = getRemainingHP(newBoard);
+  // HPパーセンテージを計算
+  const hp = Math.floor((remainingMasses / opponent.totalMasses) * 100);
 
   // 勝者判定
   let winner: PlayerId | null = null;
-  if (areAllShipsSunk(newBoard, newShips) || remainingHP <= 0) {
+  if (areAllShipsSunk(updatedBoard, updatedShips) || remainingMasses <= 0) {
     winner = action.playerId;
   }
 
@@ -242,9 +226,10 @@ function processAttackAction(
       ...gameState.players,
       [opponentId]: {
         ...opponent,
-        board: newBoard,
-        ships: newShips,
-        remainingHP,
+        board: updatedBoard,
+        ships: updatedShips,
+        remainingMasses,
+        hp,
       },
     },
     currentTurn: opponentId,
@@ -266,21 +251,18 @@ function processSkillAction(
   gameState: GameState,
   action: GameAction
 ): GameState {
-  if (action.type !== 'use_skill' || !action.skillId) {
+  if (action.type !== 'useSkill') {
     throw new Error('Invalid skill action');
   }
 
   const player = gameState.players[action.playerId];
+  const skillData = action.data as import('@/types/game').SkillActionData;
+  const skillId = skillData.skillUse.skillId;
 
-  // スキルを使用済みにする
-  const newAvailableSkills = player.availableSkills.map((skill) =>
-    skill.id === action.skillId ? { ...skill, isUsed: true } : skill
-  );
-
-  const usedSkill = player.availableSkills.find((s) => s.id === action.skillId);
-  const newUsedSkills = usedSkill
-    ? [...player.usedSkills, usedSkill]
-    : player.usedSkills;
+  // スキルIDを使用済みリストに追加
+  const newActiveSkills = player.activeSkills.includes(skillId)
+    ? player.activeSkills
+    : [...player.activeSkills, skillId];
 
   // TODO: 実際のスキル効果を実装（Week 3）
 
@@ -290,8 +272,7 @@ function processSkillAction(
       ...gameState.players,
       [action.playerId]: {
         ...player,
-        availableSkills: newAvailableSkills,
-        usedSkills: newUsedSkills,
+        activeSkills: newActiveSkills,
       },
     },
   };
@@ -370,9 +351,9 @@ export function getGameStats(gameState: GameState, playerId: PlayerId) {
   return {
     hitCount,
     missCount,
-    remainingHP: player.remainingHP,
-    opponentRemainingHP: opponent.remainingHP,
-    skillsUsed: player.usedSkills.length,
+    remainingHP: player.hp,
+    opponentRemainingHP: opponent.hp,
+    skillsUsed: player.activeSkills.length,
     turnCount: gameState.turnCount,
   };
 }

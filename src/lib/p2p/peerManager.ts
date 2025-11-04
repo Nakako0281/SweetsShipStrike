@@ -130,8 +130,8 @@ export class PeerManager {
    */
   sendAction(action: GameAction): boolean {
     return this.sendMessage({
-      type: 'game_action',
-      data: action,
+      type: 'gameAction',
+      payload: action,
       timestamp: Date.now(),
     });
   }

@@ -7,20 +7,32 @@ import type {
   ShipType,
   Direction,
   AttackResult,
+  BoardCell,
+  InternalBoard,
 } from '@/types/game';
 
-/** 内部的なセル型（shipIdを保持） */
-export interface Cell {
-  state: CellState;
-  shipId: string | null;
-}
-
-export type Board = Cell[][];
+// 型エイリアス（後方互換性とコード可読性のため）
+export type Cell = BoardCell;
+export type Board = InternalBoard;
 
 /**
  * ボード管理ロジック
  * ボードの初期化、船の配置、攻撃処理などを管理
  */
+
+/**
+ * InternalBoardをDisplayBoardに変換（表示用）
+ * @param board - 内部ボード
+ * @returns 表示用ボード
+ */
+export function toDisplayBoard(board: InternalBoard): CellState[][] {
+  return board.map((row) =>
+    row.map((cell) => {
+      // 'ship'状態は外部には'empty'として見せる（未攻撃）
+      return cell.state === 'ship' ? 'empty' : cell.state;
+    })
+  );
+}
 
 /**
  * 空のボードを作成
@@ -43,6 +55,11 @@ export function createEmptyBoard(): Board {
 export function canPlaceShip(board: Board, ship: Ship): boolean {
   const { position, direction, type } = ship;
   const shipDef = SHIP_DEFINITIONS[type];
+
+  if (!position) {
+    return false; // 位置が指定されていない
+  }
+
   const { x, y } = position;
 
   // ボード外チェック
@@ -79,6 +96,12 @@ export function placeShip(board: Board, ship: Ship): Board | null {
 
   const newBoard = board.map((row) => row.map((cell) => ({ ...cell })));
   const shipDef = SHIP_DEFINITIONS[ship.type];
+
+  // canPlaceShipでnullチェック済み
+  if (!ship.position) {
+    return null;
+  }
+
   const { x, y } = ship.position;
 
   for (let i = 0; i < shipDef.size; i++) {
@@ -174,6 +197,7 @@ export function processAttack(
   // 船のhits配列を更新
   const updatedShips = ships.map((ship) => {
     if (ship.id !== shipId) return ship;
+    if (!ship.position) return ship; // 配置されていない船（通常ありえない）
 
     // どの位置がヒットしたか計算
     const { x: shipX, y: shipY } = ship.position;
@@ -210,6 +234,10 @@ export function processAttack(
  * @returns 沈んでいればtrue
  */
 export function isShipSunk(board: Board, ship: Ship): boolean {
+  if (!ship.position) {
+    return false;
+  }
+
   const shipDef = SHIP_DEFINITIONS[ship.type];
   const { x, y } = ship.position;
 

@@ -104,8 +104,10 @@ export const useGameStore = create<GameStore>()(
           const action: GameAction = {
             type: 'attack',
             playerId: localPlayerId,
-            position,
             timestamp: Date.now(),
+            data: {
+              position,
+            },
           };
 
           const newGameState = processAction(gameState, action);
@@ -128,11 +130,16 @@ export const useGameStore = create<GameStore>()(
 
         try {
           const action: GameAction = {
-            type: 'use_skill',
+            type: 'useSkill',
             playerId: localPlayerId,
-            skillId,
-            position,
             timestamp: Date.now(),
+            data: {
+              skillUse: {
+                skillId,
+                shipId: '', // TODO: 実際のshipIdを指定
+                target: position,
+              },
+            },
           };
 
           const newGameState = processAction(gameState, action);
@@ -145,7 +152,7 @@ export const useGameStore = create<GameStore>()(
         }
       },
 
-      // 降参
+      // 降参（ゲーム終了）
       surrender: () => {
         const { gameState, localPlayerId } = get();
         if (!gameState || !localPlayerId) {
@@ -153,21 +160,16 @@ export const useGameStore = create<GameStore>()(
           return;
         }
 
-        try {
-          const action: GameAction = {
-            type: 'surrender',
-            playerId: localPlayerId,
-            timestamp: Date.now(),
-          };
-
-          const newGameState = processAction(gameState, action);
-          set({
-            gameState: newGameState,
-            error: null,
-          });
-        } catch (error) {
-          set({ error: (error as Error).message });
-        }
+        // 降参は相手を勝者にしてゲームを終了
+        const opponentId = localPlayerId === 'player1' ? 'player2' : 'player1';
+        set({
+          gameState: {
+            ...gameState,
+            phase: 'finished',
+            winner: opponentId,
+          },
+          error: null,
+        });
       },
 
       // ゲームリセット

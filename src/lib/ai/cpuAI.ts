@@ -1,7 +1,8 @@
 import { BOARD_SIZE } from '@/lib/utils/constants';
-import type { Position, CellState, CharacterType } from '@/types/game';
+import type { Position, CellState, CharacterType, DisplayBoard } from '@/types/game';
 
-type Board = CellState[][];
+// CPU AIは相手ボードの表示用ビューを受け取る
+type Board = DisplayBoard;
 
 /**
  * CPU AI ロジック
