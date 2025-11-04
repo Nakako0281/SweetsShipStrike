@@ -18,6 +18,7 @@ import Notification from '@/components/ui/Notification';
 import HitEffect from '@/components/effects/HitEffect';
 import MissEffect from '@/components/effects/MissEffect';
 import SinkEffect from '@/components/effects/SinkEffect';
+import ConsecutiveAttackIndicator from '@/components/game/ConsecutiveAttackIndicator';
 import type { CharacterType, GameMode, Position, Ship } from '@/types/game';
 
 /**
@@ -246,6 +247,12 @@ export default function GamePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 連続攻撃インジケーター */}
+      <ConsecutiveAttackIndicator
+        show={gameState.turnPhase === 'after_hit' && isMyTurn}
+        hitCount={gameState.consecutiveHits}
+      />
 
       {/* スキル実行モーダル */}
       <SkillModal

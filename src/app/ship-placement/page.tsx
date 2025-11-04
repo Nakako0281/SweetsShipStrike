@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Notification from '@/components/ui/Notification';
+import Timer from '@/components/ui/Timer';
 import BoardComponent from '@/components/game/Board';
 import { useGameStore } from '@/store/gameStore';
 import { useUIStore } from '@/store/uiStore';
@@ -27,24 +28,17 @@ export default function ShipPlacementPage() {
   const [placedShips, setPlacedShips] = useState<ShipType[]>([]);
   const [selectedShipIndex, setSelectedShipIndex] = useState<number | null>(null);
   const [isHorizontal, setIsHorizontal] = useState(true);
-  const [timeRemaining, setTimeRemaining] = useState(SETUP_TIMER_SECONDS);
-
-  useEffect(() => {
-    if (timeRemaining <= 0) {
-      handleAutoPlace();
-      return;
-    }
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeRemaining]);
 
   useEffect(() => {
     if (!mode || !character) {
       router.push('/mode-select');
     }
   }, [mode, character, router]);
+
+  const handleTimeout = () => {
+    handleAutoPlace();
+    addNotification({ type: 'warning', message: '時間切れ！自動配置されました' });
+  };
 
   const availableShips = SHIPS.map((ship, index) => ({
     ...ship,
@@ -142,9 +136,21 @@ export default function ShipPlacementPage() {
 
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6">
         <h1 className="text-3xl md:text-5xl font-bold text-pink-600 mb-2 drop-shadow-lg">船の配置</h1>
+
+        {/* タイマー */}
+        <div className="flex justify-center mb-4">
+          <div className="w-64">
+            <Timer
+              initialSeconds={SETUP_TIMER_SECONDS}
+              onTimeout={handleTimeout}
+              isActive={!allShipsPlaced}
+              showWarning={true}
+              warningThreshold={30}
+            />
+          </div>
+        </div>
+
         <div className="flex items-center justify-center gap-4 text-purple-600 font-semibold">
-          <span>残り時間: {timeRemaining}秒</span>
-          <span>|</span>
           <span>配置済み: {placedShips.length}/{SHIPS.length}</span>
         </div>
       </motion.div>
