@@ -1,0 +1,103 @@
+/* レスポンシブデザイン補助クラス */
+
+/* モバイルファースト: 小画面向けのデフォルトスタイル */
+
+/* タブレット以上 (768px~) */
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .responsive-text {
+    font-size: 1.125rem;
+  }
+
+  .responsive-padding {
+    padding: 2rem;
+  }
+}
+
+/* デスクトップ (1024px~) */
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .responsive-text {
+    font-size: 1.25rem;
+  }
+
+  .responsive-padding {
+    padding: 3rem;
+  }
+}
+
+/* 大画面 (1280px~) */
+@media (min-width: 1280px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .responsive-text {
+    font-size: 1.5rem;
+  }
+}
+
+/* タッチデバイス向け: タップターゲットサイズ最適化 */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  [role='button'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* 縦向きモバイル */
+@media (max-width: 767px) and (orientation: portrait) {
+  .game-board {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .ship-list {
+    flex-direction: column;
+  }
+}
+
+/* 横向きモバイル */
+@media (max-width: 767px) and (orientation: landscape) {
+  .game-container {
+    flex-direction: row;
+  }
+
+  .ship-list {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+}
+
+/* プリント対応 */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ダークモード対応（将来の拡張用） */
+@media (prefers-color-scheme: dark) {
+  .dark-mode-support {
+    /* ダークモード用のスタイルをここに追加 */
+  }
+}
+
+/* アニメーション削減モード */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
