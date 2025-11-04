@@ -47,6 +47,11 @@ export default function TitlePage() {
     setIsSettingsOpen(true);
   };
 
+  const handleTutorial = () => {
+    playSE('button');
+    router.push('/tutorial');
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-100 to-purple-100 p-4">
       {/* タイトルロゴ */}
@@ -68,7 +73,11 @@ export default function TitlePage() {
           スタート
         </Button>
 
-        <Button onClick={handleSettings} size="lg" variant="secondary">
+        <Button onClick={handleTutorial} size="lg" variant="secondary">
+          遊び方
+        </Button>
+
+        <Button onClick={handleSettings} size="lg" variant="ghost">
           設定
         </Button>
 
