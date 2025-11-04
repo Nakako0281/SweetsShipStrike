@@ -24,20 +24,21 @@ export default function Ship({ ship, isPlacing = false, isSelected = false, onCl
   const shipDef = SHIP_DEFINITIONS[ship.type];
   const isHorizontal = ship.direction === 'horizontal';
 
-  // HPバーの計算
-  const hpPercentage = (ship.hp / ship.maxHp) * 100;
+  // HPバーの計算 (被弾していない部分の割合)
+  const remainingHits = ship.hits.filter((hit) => !hit).length;
+  const hpPercentage = (remainingHits / ship.size) * 100;
 
   return (
     <motion.div
       className={`
         relative p-3 rounded-lg border-2 transition-all
         ${isSelected ? 'border-pink-500 bg-pink-50 shadow-lg' : 'border-purple-200 bg-white hover:border-purple-300'}
-        ${ship.isSunk ? 'opacity-50 grayscale' : ''}
-        ${onClick && !ship.isSunk ? 'cursor-pointer' : 'cursor-default'}
+        ${ship.sunk ? 'opacity-50 grayscale' : ''}
+        ${onClick && !ship.sunk ? 'cursor-pointer' : 'cursor-default'}
       `}
-      onClick={onClick && !ship.isSunk ? onClick : undefined}
-      whileHover={onClick && !ship.isSunk ? { scale: 1.05 } : {}}
-      whileTap={onClick && !ship.isSunk ? { scale: 0.95 } : {}}
+      onClick={onClick && !ship.sunk ? onClick : undefined}
+      whileHover={onClick && !ship.sunk ? { scale: 1.05 } : {}}
+      whileTap={onClick && !ship.sunk ? { scale: 0.95 } : {}}
     >
       {/* 船の名前 */}
       <h3 className="text-sm font-bold text-purple-800 mb-1">{shipDef.name}</h3>
@@ -52,10 +53,10 @@ export default function Ship({ ship, isPlacing = false, isSelected = false, onCl
             key={i}
             className={`
               w-6 h-6 rounded flex items-center justify-center
-              ${i < ship.hp ? 'bg-pink-400' : 'bg-red-600'}
+              ${!ship.hits[i] ? 'bg-pink-400' : 'bg-red-600'}
             `}
           >
-            {i >= ship.hp && '💥'}
+            {ship.hits[i] && '💥'}
           </div>
         ))}
       </div>
@@ -72,11 +73,11 @@ export default function Ship({ ship, isPlacing = false, isSelected = false, onCl
 
       {/* HP表示 */}
       <p className="text-xs text-center text-purple-700 font-semibold">
-        HP: {ship.hp} / {ship.maxHp}
+        HP: {remainingHits} / {ship.size}
       </p>
 
       {/* 撃沈マーク */}
-      {ship.isSunk && (
+      {ship.sunk && (
         <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
           撃沈
         </div>

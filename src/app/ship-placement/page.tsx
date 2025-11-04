@@ -11,7 +11,9 @@ import { useUIStore } from '@/store/uiStore';
 import { createEmptyBoard, canPlaceShip, placeShip, randomPlaceShips } from '@/lib/game/board';
 import { BOARD_SIZE, SETUP_TIMER_SECONDS } from '@/lib/utils/constants';
 import { SHIPS } from '@/lib/game/ships';
-import type { CharacterType, GameMode, Ship, Position, Board as BoardType } from '@/types/game';
+import type { CharacterType, GameMode, Ship, Position, CellState } from '@/types/game';
+
+type BoardType = CellState[][];
 
 export default function ShipPlacementPage() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function ShipPlacementPage() {
   const character = searchParams.get('character') as CharacterType | null;
 
   const initializeGame = useGameStore((state) => state.initializeGame);
+  const placeShips = useGameStore((state) => state.placeShips);
   const addNotification = useUIStore((state) => state.addNotification);
 
   const [board, setBoard] = useState<BoardType>(createEmptyBoard());
@@ -59,15 +62,14 @@ export default function ShipPlacementPage() {
 
     const ship = SHIPS[selectedShipIndex];
     const newShip: Ship = {
-      id: ship.id,
-      name: ship.name,
+      id: `player1_${ship.id}`,
+      type: ship.id,
       size: ship.size,
       position: position,
-      orientation: isHorizontal ? 'horizontal' : 'vertical',
-      hp: ship.size,
-      maxHp: ship.size,
-      isSunk: false,
-      skill: ship.skill,
+      direction: isHorizontal ? 'horizontal' : 'vertical',
+      hits: Array(ship.size).fill(false),
+      sunk: false,
+      skillUsed: false,
     };
 
     if (!canPlaceShip(board, newShip)) {
@@ -105,9 +107,25 @@ export default function ShipPlacementPage() {
   };
 
   const handleAutoPlace = () => {
-    const result = randomPlaceShips();
-    setBoard(result.board);
-    setPlacedShips(result.ships);
+    const ships = randomPlaceShips();
+    const newBoard = createEmptyBoard();
+
+    // 船をボードに配置
+    ships.forEach((ship) => {
+      if (ship.position) {
+        const { x, y } = ship.position;
+        for (let i = 0; i < ship.size; i++) {
+          if (ship.direction === 'horizontal') {
+            // TODO: ボードに船の状態を設定
+          } else {
+            // TODO: ボードに船の状態を設定
+          }
+        }
+      }
+    });
+
+    setBoard(newBoard);
+    setPlacedShips(ships);
     setSelectedShipIndex(null);
     addNotification({ type: 'success', message: '自動配置が完了しました' });
   };
@@ -118,7 +136,13 @@ export default function ShipPlacementPage() {
       return;
     }
 
-    initializeGame(mode!, character!, placedShips);
+    // ゲーム初期化（プレイヤー1とプレイヤー2のキャラクターを指定）
+    const player2Char: CharacterType = mode === 'cpu' ? 'cpu_normal' : character!;
+    initializeGame(mode!, character!, player2Char);
+
+    // プレイヤー1の船を配置
+    placeShips('player1', placedShips);
+
     addNotification({ type: 'success', message: 'ゲームを開始します！' });
     router.push(`/game?mode=${mode}&character=${character}`);
   };
@@ -146,7 +170,7 @@ export default function ShipPlacementPage() {
         <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-bold text-purple-800 mb-4">配置ボード</h2>
-            <Board board={board} ships={placedShips} onCellClick={handleCellClick} isInteractive={true} showShips={true} />
+            <Board board={board} onCellClick={handleCellClick} disabled={false} />
           </div>
         </motion.div>
 

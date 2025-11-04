@@ -52,13 +52,13 @@ export default function ShipList({
         <div className="flex justify-between text-sm">
           <span className="text-purple-700">残存:</span>
           <span className="font-bold text-green-600">
-            {ships.filter((s) => !s.isSunk).length} / {ships.length}
+            {ships.filter((s) => !s.sunk).length} / {ships.length}
           </span>
         </div>
         <div className="flex justify-between text-sm mt-1">
           <span className="text-purple-700">撃沈:</span>
           <span className="font-bold text-red-600">
-            {ships.filter((s) => s.isSunk).length} / {ships.length}
+            {ships.filter((s) => s.sunk).length} / {ships.length}
           </span>
         </div>
       </div>

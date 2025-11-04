@@ -44,14 +44,14 @@ export default function Cell({
       case 'empty':
         return `${baseClass} bg-blue-200 hover:bg-blue-300 ${!disabled && onClick ? 'cursor-pointer' : 'cursor-default'}`;
 
-      case 'ship':
-        return `${baseClass} bg-pink-400 ${!disabled && onClick ? 'cursor-pointer hover:bg-pink-500' : 'cursor-default'}`;
-
       case 'hit':
         return `${baseClass} bg-red-500 cursor-default`;
 
       case 'miss':
         return `${baseClass} bg-gray-400 cursor-default`;
+
+      case 'sunk':
+        return `${baseClass} bg-purple-600 cursor-default`;
 
       default:
         return `${baseClass} bg-blue-200`;
@@ -64,8 +64,8 @@ export default function Cell({
         return '💥';
       case 'miss':
         return '○';
-      case 'ship':
-        return isOpponentBoard ? '' : '🍰'; // 相手のボードでは船を表示しない
+      case 'sunk':
+        return '💀';
       default:
         return '';
     }
@@ -88,7 +88,7 @@ export default function Cell({
       whileHover={!disabled && onClick && state !== 'hit' && state !== 'miss' ? { scale: 1.1 } : {}}
       whileTap={!disabled && onClick && state !== 'hit' && state !== 'miss' ? { scale: 0.95 } : {}}
       transition={{ duration: 0.1 }}
-      aria-label={`Cell at row ${position.row}, column ${position.col}, state: ${state}`}
+      aria-label={`Cell at row ${position.y}, column ${position.x}, state: ${state}`}
     >
       {getCellContent()}
     </motion.button>

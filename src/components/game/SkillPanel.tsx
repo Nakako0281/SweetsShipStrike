@@ -67,45 +67,29 @@ export default function SkillPanel({ availableSkills, onSkillClick, disabled = f
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {availableSkills.map((skill) => (
           <motion.button
-            key={skill.id}
-            className={`
-              relative p-3 rounded-lg border-2 text-left transition-all
-              ${
-                skill.isUsed
-                  ? 'border-gray-300 bg-gray-100 opacity-50 cursor-not-allowed'
-                  : disabled
-                  ? 'border-purple-200 bg-white cursor-not-allowed'
-                  : 'border-purple-300 bg-white hover:border-purple-400 hover:shadow-md cursor-pointer'
-              }
-            `}
-            onClick={() => !skill.isUsed && !disabled && onSkillClick && onSkillClick(skill)}
-            disabled={skill.isUsed || disabled}
-            whileHover={!skill.isUsed && !disabled ? { scale: 1.03 } : {}}
-            whileTap={!skill.isUsed && !disabled ? { scale: 0.97 } : {}}
+            key={skill.skillId}
+            className="relative p-3 rounded-lg border-2 text-left border-purple-300 bg-white hover:border-purple-400 hover:shadow-md cursor-pointer transition-all"
+            onClick={() => !disabled && onSkillClick && onSkillClick(skill)}
+            disabled={disabled}
+            whileHover={!disabled ? { scale: 1.03 } : {}}
+            whileTap={!disabled ? { scale: 0.97 } : {}}
           >
             {/* スキルアイコンと名前 */}
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-2xl">{getSkillIcon(skill.id)}</span>
-              <h3 className="text-sm font-bold text-purple-800 flex-1">{skill.name}</h3>
-            </div>
-
-            {/* スキルタイプバッジ */}
-            <div className="mb-2">
-              <span className={`text-xs px-2 py-1 rounded ${getSkillTypeColor(skill.type)}`}>
-                {getSkillTypeLabel(skill.type)}
-              </span>
+              <span className="text-2xl">{getSkillIcon(skill.skillId)}</span>
+              <h3 className="text-sm font-bold text-purple-800 flex-1">スキル</h3>
             </div>
 
             {/* スキルの説明（簡易版） */}
             <p className="text-xs text-purple-600 mb-2">
-              {skill.id === 'strawberry_shield' && '次の攻撃を無効化'}
-              {skill.id === 'chocolate_bomb' && '3×3エリアを攻撃'}
-              {skill.id === 'sweet_escape' && '船を移動させる'}
-              {skill.id === 'waffle_scan' && '格子状にスキャン'}
+              {skill.skillId === 'strawberry_shield' && '次の攻撃を無効化'}
+              {skill.skillId === 'chocolate_bomb' && '3×3エリアを攻撃'}
+              {skill.skillId === 'sweet_escape' && '船を移動させる'}
+              {skill.skillId === 'waffle_scan' && '格子状にスキャン'}
             </p>
 
             {/* 使用済みマーク */}
-            {skill.isUsed && (
+            {false && (
               <div className="absolute top-2 right-2 bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded">
                 使用済み
               </div>

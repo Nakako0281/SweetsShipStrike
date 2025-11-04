@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Notification from '@/components/ui/Notification';
 import { useP2PStore } from '@/store/p2pStore';
 import { useUIStore } from '@/store/uiStore';
-import { PeerManager } from '@/lib/p2p/peerManager';
 
 /**
  * オンラインロビー画面
@@ -23,81 +22,52 @@ export default function OnlineLobbyPage() {
   const [roomIdInput, setRoomIdInput] = useState('');
 
   // P2Pストア
-  const connectionState = useP2PStore((state) => state.connectionState);
-  const isHost = useP2PStore((state) => state.isHost);
-  const roomId = useP2PStore((state) => state.roomId);
-  const setConnectionState = useP2PStore((state) => state.setConnectionState);
-  const setHost = useP2PStore((state) => state.setHost);
-  const setRoomId = useP2PStore((state) => state.setRoomId);
+  const connection = useP2PStore((state) => state.connection);
+  const error = useP2PStore((state) => state.error);
+  const createRoom = useP2PStore((state) => state.createRoom);
+  const joinRoom = useP2PStore((state) => state.joinRoom);
   const disconnect = useP2PStore((state) => state.disconnect);
+
+  const isHost = connection.isHost;
+  const roomId = connection.peerId;
+  const isConnected = connection.isConnected;
 
   // UIストア
   const addNotification = useUIStore((state) => state.addNotification);
 
-  // PeerManagerインスタンス
-  const [peerManager, setPeerManager] = useState<PeerManager | null>(null);
-
-  // 初期化
-  useEffect(() => {
-    const manager = PeerManager.getInstance();
-    setPeerManager(manager);
-
-    return () => {
-      // クリーンアップ
-      if (connectionState === 'disconnected') {
-        manager.disconnect();
-      }
-    };
-  }, []);
-
   // ルーム作成処理
   const handleCreateRoom = async () => {
-    if (!peerManager) return;
-
     try {
-      setConnectionState('connecting');
       addNotification({
         type: 'info',
         message: 'ルームを作成中...',
       });
 
-      const createdRoomId = await peerManager.createRoom(
-        (data) => {
-          // メッセージ受信ハンドラー
-          console.log('Received data:', data);
-        },
-        (err) => {
-          // エラーハンドラー
-          console.error('Connection error:', err);
-          setConnectionState('disconnected');
-          addNotification({
-            type: 'error',
-            message: '接続エラーが発生しました',
-          });
-        }
-      );
+      const createdRoomId = await createRoom();
 
-      setHost(true);
-      setRoomId(createdRoomId);
-      setConnectionState('connected');
-
-      addNotification({
-        type: 'success',
-        message: `ルームを作成しました: ${createdRoomId}`,
-      });
-    } catch (error) {
-      setConnectionState('disconnected');
+      if (createdRoomId) {
+        addNotification({
+          type: 'success',
+          message: `ルームを作成しました: ${createdRoomId}`,
+        });
+      } else {
+        addNotification({
+          type: 'error',
+          message: 'ルーム作成に失敗しました',
+        });
+      }
+    } catch (err) {
       addNotification({
         type: 'error',
         message: 'ルーム作成に失敗しました',
       });
-      console.error('Failed to create room:', error);
+      console.error('Failed to create room:', err);
     }
   };
 
   // ルーム参加処理
   const handleJoinRoom = async () => {
-    if (!peerManager || !roomIdInput.trim()) {
+    if (!roomIdInput.trim()) {
       addNotification({
         type: 'warning',
         message: 'ルームIDを入力してください',
@@ -106,55 +76,40 @@ export default function OnlineLobbyPage() {
     }
 
     try {
-      setConnectionState('connecting');
       addNotification({
         type: 'info',
         message: 'ルームに接続中...',
       });
 
-      await peerManager.joinRoom(
-        roomIdInput.trim(),
-        (data) => {
-          // メッセージ受信ハンドラー
-          console.log('Received data:', data);
-        },
-        (err) => {
-          // エラーハンドラー
-          console.error('Connection error:', err);
-          setConnectionState('disconnected');
-          addNotification({
-            type: 'error',
-            message: '接続エラーが発生しました',
-          });
-        }
-      );
+      const success = await joinRoom(roomIdInput.trim());
 
-      setHost(false);
-      setRoomId(roomIdInput.trim());
-      setConnectionState('connected');
+      if (success) {
+        addNotification({
+          type: 'success',
+          message: 'ルームに参加しました',
+        });
 
-      addNotification({
-        type: 'success',
-        message: 'ルームに参加しました',
-      });
-
-      // キャラクター選択画面へ遷移
-      setTimeout(() => {
-        router.push('/character-select?mode=online');
-      }, 1000);
-    } catch (error) {
-      setConnectionState('disconnected');
+        // キャラクター選択画面へ遷移
+        setTimeout(() => {
+          router.push('/character-select?mode=online');
+        }, 1000);
+      } else {
+        addNotification({
+          type: 'error',
+          message: 'ルーム参加に失敗しました',
+        });
+      }
+    } catch (err) {
       addNotification({
         type: 'error',
         message: 'ルーム参加に失敗しました',
       });
-      console.error('Failed to join room:', error);
+      console.error('Failed to join room:', err);
     }
   };
 
   const handleBack = () => {
-    if (connectionState === 'connected' && peerManager) {
-      peerManager.disconnect();
+    if (isConnected) {
       disconnect();
     }
     router.push('/mode-select');
@@ -194,7 +149,7 @@ export default function OnlineLobbyPage() {
         {/* ルーム作成セクション */}
         <div className="mb-6">
           <h2 className="text-xl font-bold text-purple-800 mb-3">ルームを作成</h2>
-          {connectionState === 'connected' && isHost && roomId ? (
+          {isConnected && isHost && roomId ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -225,10 +180,10 @@ export default function OnlineLobbyPage() {
               onClick={handleCreateRoom}
               variant="primary"
               size="md"
-              disabled={connectionState === 'connecting'}
+              disabled={false}
               className="w-full"
             >
-              {connectionState === 'connecting' ? '作成中...' : 'ルーム作成'}
+              ルーム作成
             </Button>
           )}
         </div>
@@ -253,25 +208,21 @@ export default function OnlineLobbyPage() {
             onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())}
             className="w-full px-4 py-3 border-2 border-purple-200 rounded-lg focus:border-pink-500 focus:outline-none mb-3 text-center text-lg font-semibold tracking-wider font-mono"
             maxLength={16}
-            disabled={connectionState === 'connecting' || connectionState === 'connected'}
+            disabled={isConnected}
           />
           <Button
             onClick={handleJoinRoom}
             variant="secondary"
             size="md"
-            disabled={
-              !roomIdInput.trim() ||
-              connectionState === 'connecting' ||
-              connectionState === 'connected'
-            }
+            disabled={!roomIdInput.trim() || isConnected}
             className="w-full"
           >
-            {connectionState === 'connecting' ? '接続中...' : '参加'}
+            参加
           </Button>
         </div>
 
         {/* 接続完了時の表示 */}
-        {connectionState === 'connected' && isHost && (
+        {isConnected && isHost && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -289,19 +240,6 @@ export default function OnlineLobbyPage() {
             >
               キャラクター選択へ
             </Button>
-          </motion.div>
-        )}
-
-        {/* 接続状態インジケーター */}
-        {connectionState === 'connecting' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-3 py-4"
-          >
-            <div className="w-3 h-3 bg-pink-500 rounded-full animate-bounce" />
-            <div className="w-3 h-3 bg-purple-500 rounded-full animate-bounce delay-100" />
-            <div className="w-3 h-3 bg-pink-500 rounded-full animate-bounce delay-200" />
           </motion.div>
         )}
       </motion.div>

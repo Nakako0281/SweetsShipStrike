@@ -21,12 +21,12 @@ interface HUDProps {
  */
 export default function HUD({ player, opponent, isPlayerTurn, turnCount }: HUDProps) {
   // HP割合計算
-  const playerHPPercentage = (player.remainingHP / 14) * 100;
-  const opponentHPPercentage = (opponent.remainingHP / 14) * 100;
+  const playerHPPercentage = player.hp;
+  const opponentHPPercentage = opponent.hp;
 
   // 残存艦数計算
-  const playerShipsAlive = player.ships.filter((s) => !s.isSunk).length;
-  const opponentShipsAlive = opponent.ships.filter((s) => !s.isSunk).length;
+  const playerShipsAlive = player.ships.filter((s) => !s.sunk).length;
+  const opponentShipsAlive = opponent.ships.filter((s) => !s.sunk).length;
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-4 mb-4">
@@ -54,7 +54,7 @@ export default function HUD({ player, opponent, isPlayerTurn, turnCount }: HUDPr
             <div className="flex justify-between text-xs mb-1">
               <span className="font-semibold text-purple-700">HP</span>
               <span className="font-bold text-pink-600">
-                {player.remainingHP} / 14
+                {player.remainingMasses} / {player.totalMasses}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
@@ -80,7 +80,7 @@ export default function HUD({ player, opponent, isPlayerTurn, turnCount }: HUDPr
           {/* 使用済みスキル */}
           <div className="flex justify-between items-center text-xs">
             <span className="text-purple-700">使用スキル:</span>
-            <span className="font-bold text-pink-600">{player.usedSkills.length} / 4</span>
+            <span className="font-bold text-pink-600">{player.activeSkills.length} / 4</span>
           </div>
         </div>
 
@@ -93,7 +93,7 @@ export default function HUD({ player, opponent, isPlayerTurn, turnCount }: HUDPr
             <div className="flex justify-between text-xs mb-1">
               <span className="font-semibold text-purple-700">HP</span>
               <span className="font-bold text-purple-600">
-                {opponent.remainingHP} / 14
+                {opponent.remainingMasses} / {opponent.totalMasses}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
@@ -119,7 +119,7 @@ export default function HUD({ player, opponent, isPlayerTurn, turnCount }: HUDPr
           {/* 使用済みスキル */}
           <div className="flex justify-between items-center text-xs">
             <span className="text-purple-700">使用スキル:</span>
-            <span className="font-bold text-purple-600">{opponent.usedSkills.length} / 4</span>
+            <span className="font-bold text-purple-600">{opponent.activeSkills.length} / 4</span>
           </div>
         </div>
       </div>

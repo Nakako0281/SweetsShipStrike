@@ -30,6 +30,7 @@ export default function ResultPage() {
 
   // ゲームストアから統計データを取得
   const gameState = useGameStore((state) => state.gameState);
+  const localPlayerId = useGameStore((state) => state.localPlayerId);
   const resetGame = useGameStore((state) => state.resetGame);
 
   // パラメータバリデーション
@@ -43,7 +44,7 @@ export default function ResultPage() {
 
   // 統計データの計算
   const stats = useMemo(() => {
-    if (!gameState) {
+    if (!gameState || !localPlayerId) {
       return {
         hitCount: 0,
         missCount: 0,
@@ -53,30 +54,16 @@ export default function ResultPage() {
       };
     }
 
-    const myPlayer = gameState.players.find((p) => p.id === gameState.myPlayerId);
-    if (!myPlayer) {
-      return {
-        hitCount: 0,
-        missCount: 0,
-        skillCount: 0,
-        remainingHP: 0,
-        totalTurns: 0,
-      };
-    }
-
-    // 攻撃履歴からヒット数とミス数を計算
-    const myAttacks = gameState.turnHistory.filter((turn) => turn.playerId === gameState.myPlayerId);
-    const hitCount = myAttacks.filter((turn) => turn.result === 'hit' || turn.result === 'sunk').length;
-    const missCount = myAttacks.filter((turn) => turn.result === 'miss').length;
+    const myPlayer = gameState.players[localPlayerId];
 
     return {
-      hitCount,
-      missCount,
-      skillCount: myPlayer.skillsUsed.length,
-      remainingHP: myPlayer.totalHP,
-      totalTurns: gameState.turnHistory.length,
+      hitCount: 0, // TODO: 攻撃履歴から計算
+      missCount: 0, // TODO: 攻撃履歴から計算
+      skillCount: myPlayer.activeSkills.length,
+      remainingHP: myPlayer.hp,
+      totalTurns: gameState.turnCount,
     };
-  }, [gameState]);
+  }, [gameState, localPlayerId]);
 
   // タイトルへ戻る
   const handleBackToTitle = () => {

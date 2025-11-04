@@ -23,10 +23,8 @@ export default function TitlePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // UIストア
-  const soundEnabled = useUIStore((state) => state.soundEnabled);
-  const bgmEnabled = useUIStore((state) => state.bgmEnabled);
-  const toggleSound = useUIStore((state) => state.toggleSound);
-  const toggleBGM = useUIStore((state) => state.toggleBGM);
+  const isMuted = useUIStore((state) => state.isMuted);
+  const toggleMute = useUIStore((state) => state.toggleMute);
 
   // サウンド
   const { playSE, playBGM } = useSound();
@@ -107,32 +105,16 @@ export default function TitlePage() {
         <div className="space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-              <span className="text-lg font-semibold text-purple-800">BGM</span>
+              <span className="text-lg font-semibold text-purple-800">サウンド</span>
               <button
-                onClick={toggleBGM}
+                onClick={toggleMute}
                 className={`w-16 h-8 rounded-full transition-colors ${
-                  bgmEnabled ? 'bg-pink-500' : 'bg-gray-300'
+                  !isMuted ? 'bg-pink-500' : 'bg-gray-300'
                 }`}
               >
                 <div
                   className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${
-                    bgmEnabled ? 'translate-x-9' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
-              <span className="text-lg font-semibold text-purple-800">効果音</span>
-              <button
-                onClick={toggleSound}
-                className={`w-16 h-8 rounded-full transition-colors ${
-                  soundEnabled ? 'bg-pink-500' : 'bg-gray-300'
-                }`}
-              >
-                <div
-                  className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${
-                    soundEnabled ? 'translate-x-9' : 'translate-x-1'
+                    !isMuted ? 'translate-x-9' : 'translate-x-1'
                   }`}
                 />
               </button>

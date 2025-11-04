@@ -1,7 +1,9 @@
 import React from 'react';
 import { BOARD_SIZE } from '@/lib/utils/constants';
 import Cell from './Cell';
-import type { Board as BoardType, CellState, Position } from '@/types/game';
+import type { CellState, Position } from '@/types/game';
+
+type BoardType = CellState[][];
 
 interface BoardProps {
   board: BoardType;

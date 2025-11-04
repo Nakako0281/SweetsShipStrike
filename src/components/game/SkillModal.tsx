@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Board from '@/components/game/Board';
-import type { Ship, Position, Board as BoardType } from '@/types/game';
+import { SHIP_DEFINITIONS } from '@/lib/game/ships';
+import type { Ship, Position, CellState } from '@/types/game';
+
+type BoardType = CellState[][];
 
 interface SkillModalProps {
   isOpen: boolean;
@@ -62,7 +65,14 @@ export default function SkillModal({
     },
   };
 
-  const skill = skillInfo[selectedSkill.skill.id as keyof typeof skillInfo];
+  // 船の定義からスキル情報を取得
+  const shipDef = SHIP_DEFINITIONS[selectedSkill.type];
+  const skillId = shipDef.skill.id;
+  const skill = skillInfo[skillId as keyof typeof skillInfo] || {
+    name: shipDef.skill.name,
+    description: shipDef.skill.description,
+    icon: '✨',
+  };
 
   return (
     <AnimatePresence>
@@ -100,15 +110,14 @@ export default function SkillModal({
                 <div className="flex justify-center">
                   <Board
                     board={opponentBoard}
-                    ships={[]}
+                    isOpponentBoard={true}
                     onCellClick={handleCellClick}
-                    isInteractive={true}
-                    showShips={false}
+                    disabled={false}
                   />
                 </div>
                 {selectedPosition && (
                   <p className="text-center mt-3 text-purple-600 font-semibold">
-                    選択: ({selectedPosition.row + 1}, {selectedPosition.col + 1})
+                    選択: ({selectedPosition.y + 1}, {selectedPosition.x + 1})
                   </p>
                 )}
               </div>
