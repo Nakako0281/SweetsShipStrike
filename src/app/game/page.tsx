@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '@/hooks/useGame';
@@ -10,12 +10,13 @@ import Board from '@/components/game/Board';
 import HUD from '@/components/game/HUD';
 import ShipList from '@/components/game/ShipList';
 import SkillPanel from '@/components/game/SkillPanel';
+import SkillModal from '@/components/game/SkillModal';
 import Button from '@/components/ui/Button';
 import Notification from '@/components/ui/Notification';
 import HitEffect from '@/components/effects/HitEffect';
 import MissEffect from '@/components/effects/MissEffect';
 import SinkEffect from '@/components/effects/SinkEffect';
-import type { CharacterType, GameMode, Position } from '@/types/game';
+import type { CharacterType, GameMode, Position, Ship } from '@/types/game';
 
 /**
  * ゲーム画面
@@ -40,6 +41,10 @@ export default function GamePage() {
 
   // エフェクト管理
   const { effects, addEffect } = useGameEffects();
+
+  // スキルモーダル
+  const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState<Ship | null>(null);
 
   // ゲームロジック
   const {
@@ -169,11 +174,11 @@ export default function GamePage() {
               <SkillPanel
                 ships={myShips}
                 onSkillClick={(skillId) => {
-                  addNotification({
-                    type: 'info',
-                    message: `スキル「${skillId}」を選択しました`,
-                  });
-                  // スキル実行はモーダルなどで位置選択後に handleSkill を呼ぶ
+                  const ship = myShips.find((s) => s.skill.id === skillId);
+                  if (ship) {
+                    setSelectedSkill(ship);
+                    setIsSkillModalOpen(true);
+                  }
                 }}
                 disabled={!isMyTurn()}
               />
@@ -244,6 +249,23 @@ export default function GamePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* スキル実行モーダル */}
+      <SkillModal
+        isOpen={isSkillModalOpen}
+        onClose={() => setIsSkillModalOpen(false)}
+        selectedSkill={selectedSkill}
+        opponentBoard={opponentBoard}
+        onExecuteSkill={(position) => {
+          if (selectedSkill) {
+            handleSkill(selectedSkill.skill.id, position);
+            addNotification({
+              type: 'success',
+              message: `${selectedSkill.name}のスキルを使用しました！`,
+            });
+          }
+        }}
+      />
     </div>
   );
 }
