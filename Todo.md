@@ -10,194 +10,187 @@
 ## 🎯 Week 1：基盤構築
 
 ### 1. プロジェクトセットアップ
-- [ ] Next.js 14プロジェクト作成
-- [ ] TypeScript設定
-- [ ] Tailwind CSS設定
-- [ ] 必要な依存関係インストール
-  - [ ] PeerJS
-  - [ ] Zustand
-  - [ ] Framer Motion
-  - [ ] Howler.js
-- [ ] ESLint / Prettier設定
-- [ ] Git初期化とリポジトリ作成
+- [x] Next.js 14プロジェクト作成
+- [x] TypeScript設定
+- [x] Tailwind CSS設定
+- [x] 必要な依存関係インストール
+  - [x] PeerJS
+  - [x] Zustand
+  - [x] Framer Motion
+  - [x] Howler.js
+- [x] ESLint / Prettier設定
+- [x] Git初期化とリポジトリ作成
 
 ### 2. 型定義作成
-- [ ] `src/types/game.ts` 作成
-  - [ ] 基本型（CharacterType, ShipType, Direction等）
-  - [ ] Position, Area, CellState
-  - [ ] Character, ShipDefinition, Ship
-  - [ ] SkillDefinition, SkillUseData, SkillResult
-  - [ ] PlayerState, GameState
-  - [ ] GameAction, AttackResult
-- [ ] `src/types/p2p.ts` 作成
-  - [ ] P2PConnection, P2PMessage
-- [ ] `src/types/ui.ts` 作成
-  - [ ] UIState, ModalType, Notification
-  - [ ] Title, CharacterSkin, PlayerStats
-  - [ ] GameResult, CoinReward
+- [x] `src/types/game.ts` 作成
+  - [x] 基本型（CharacterType, ShipType, Direction等）
+  - [x] Position, Area, CellState
+  - [x] Character, ShipDefinition, Ship
+  - [x] SkillDefinition, SkillUseData, SkillResult
+  - [x] PlayerState, GameState
+  - [x] GameAction, AttackResult
+- [x] `src/types/p2p.ts` 作成
+  - [x] P2PConnection, P2PMessage
+- [x] `src/types/ui.ts` 作成
+  - [x] UIState, ModalType, Notification
+  - [x] Title, CharacterSkin, PlayerStats
+  - [x] GameResult, CoinReward
 
 ### 3. 定数・設定ファイル作成
-- [ ] `src/lib/utils/constants.ts` 作成
-  - [ ] ボードサイズ
-  - [ ] 乗り物定義
-  - [ ] キャラクター定義
-  - [ ] スキル定義
-  - [ ] タイマー設定
-- [ ] `src/lib/game/ships.ts` 作成
-  - [ ] 4種類の乗り物定義
-- [ ] `src/lib/game/characters.ts` 作成
-  - [ ] 7種類のキャラクター定義（プレイヤー4人 + CPU3人）
-- [ ] `src/lib/game/skills.ts` 作成
-  - [ ] 4種類のスキル定義
+- [x] `src/lib/utils/constants.ts` 作成
+  - [x] ボードサイズ
+  - [x] 乗り物定義
+  - [x] キャラクター定義
+  - [x] スキル定義
+  - [x] タイマー設定
+- [x] `src/lib/game/ships.ts` 作成
+  - [x] 4種類の乗り物定義
+- [x] `src/lib/game/characters.ts` 作成
+  - [x] 7種類のキャラクター定義（プレイヤー4人 + CPU3人）
+- [x] `src/lib/game/skills.ts` 作成
+  - [x] 4種類のスキル定義
 
 ### 4. 基本UI実装
-- [ ] `src/app/layout.tsx` 設定
-- [ ] `src/components/layouts/Header.tsx` 作成
-- [ ] `src/components/layouts/Footer.tsx` 作成
-- [ ] `src/components/ui/Button.tsx` 作成
-- [ ] `src/components/ui/Modal.tsx` 作成
-- [ ] `src/components/ui/LoadingSpinner.tsx` 作成
-- [ ] `src/styles/globals.css` スタイル設定
+- [x] `src/app/layout.tsx` 設定
+- [x] `src/components/layouts/Header.tsx` 作成
+- [x] `src/components/layouts/Footer.tsx` 作成
+- [x] `src/components/ui/Button.tsx` 作成
+- [x] `src/components/ui/Modal.tsx` 作成
+- [x] `src/components/ui/LoadingSpinner.tsx` 作成
+- [x] `src/styles/globals.css` スタイル設定
 
 ### 5. タイトル画面実装
-- [ ] `src/app/page.tsx` 実装
-  - [ ] タイトルロゴ表示
-  - [ ] スタートボタン
-  - [ ] 設定ボタン
-  - [ ] BGM再生機能
+- [x] `src/app/page.tsx` 実装
+  - [x] タイトルロゴ表示
+  - [x] スタートボタン
+  - [x] 設定ボタン
+  - [x] BGM再生機能
 - [ ] タイトル画面の背景画像配置
 
 ### 6. モード選択画面実装
-- [ ] `src/app/mode-select/page.tsx` 実装
-  - [ ] オンライン対戦ボタン
-  - [ ] CPU対戦ボタン
-  - [ ] 戻るボタン
-  - [ ] 画面遷移処理
+- [x] `src/app/mode-select/page.tsx` 実装
+  - [x] オンライン対戦ボタン
+  - [x] CPU対戦ボタン
+  - [x] 戻るボタン
+  - [x] 画面遷移処理
 
 ---
 
 ## 🎮 Week 2：ゲームプレイ実装
 
 ### 7. ゲームロジック実装
-- [ ] `src/lib/game/board.ts` 作成
-  - [ ] `createEmptyBoard()` - 空のボード作成
-  - [ ] `canPlaceShip()` - 配置可能判定
-  - [ ] `placeShip()` - 乗り物配置
-  - [ ] `clearShipFromBoard()` - ボードから乗り物削除
-- [ ] `src/lib/game/validation.ts` 作成
-  - [ ] 配置バリデーション
-  - [ ] 攻撃バリデーション
-  - [ ] スキル使用バリデーション
-- [ ] `src/lib/game/gameLogic.ts` 作成
-  - [ ] `initializeGame()` - ゲーム初期化
-  - [ ] `createPlayerState()` - プレイヤー状態作成
-  - [ ] `createShips()` - 乗り物リスト生成
-  - [ ] `canAttack()` - 攻撃可能判定
-  - [ ] `executeAttack()` - 攻撃実行
-  - [ ] `calculateHitIndex()` - 被弾位置計算
-  - [ ] `markAsAttacked()` - 攻撃済み記録
-  - [ ] `calculateHP()` - HP計算
-  - [ ] `calculateRemainingMasses()` - 残存マス数計算
-  - [ ] `checkDefeat()` - 敗北判定
-  - [ ] `checkGameEnd()` - ゲーム終了判定
-  - [ ] `processTurn()` - ターン処理
-  - [ ] `endTurn()` - ターン終了
-  - [ ] `checkSetupComplete()` - 配置完了確認
+- [x] `src/lib/game/board.ts` 作成
+  - [x] `createEmptyBoard()` - 空のボード作成
+  - [x] `canPlaceShip()` - 配置可能判定
+  - [x] `placeShip()` - 乗り物配置
+  - [x] `clearShipFromBoard()` - ボードから乗り物削除
+- [x] `src/lib/game/validation.ts` 作成
+  - [x] 配置バリデーション
+  - [x] 攻撃バリデーション
+  - [x] スキル使用バリデーション
+- [x] `src/lib/game/gameLogic.ts` 作成
+  - [x] `initializeGame()` - ゲーム初期化
+  - [x] `createPlayerState()` - プレイヤー状態作成
+  - [x] `createShips()` - 乗り物リスト生成
+  - [x] `canAttack()` - 攻撃可能判定
+  - [x] `executeAttack()` - 攻撃実行
+  - [x] `calculateHitIndex()` - 被弾位置計算
+  - [x] `markAsAttacked()` - 攻撃済み記録
+  - [x] `calculateHP()` - HP計算
+  - [x] `calculateRemainingMasses()` - 残存マス数計算
+  - [x] `checkDefeat()` - 敗北判定
+  - [x] `checkGameEnd()` - ゲーム終了判定
+  - [x] `processTurn()` - ターン処理
+  - [x] `endTurn()` - ターン終了
+  - [x] `checkSetupComplete()` - 配置完了確認
 
 ### 8. スキルシステム実装
-- [ ] `src/lib/game/skills.ts` 実装
-  - [ ] `executeSkill()` - スキル実行統合
-  - [ ] `useStrawberryShield()` - ストロベリーシールド
-  - [ ] `useChocolateBomb()` - チョコレートボム
-  - [ ] `useSweetEscape()` - スイートエスケープ
-  - [ ] `useWaffleScan()` - 格子スキャン
+- [x] `src/lib/game/skillEffects.ts` 実装
+  - [x] `executeSkill()` - スキル実行統合
+  - [x] `executeStrawberryShield()` - ストロベリーシールド
+  - [x] `executeChocolateBomb()` - チョコレートボム
+  - [x] `executeSweetEscape()` - スイートエスケープ
+  - [x] `executeWaffleScan()` - 格子スキャン
 
 ### 9. ゲームボードUI実装
-- [ ] `src/components/game/Board.tsx` 作成
-  - [ ] 10×10マスのグリッド表示
-  - [ ] 自分のボード / 相手のボード切り替え
-  - [ ] クリックイベント処理
-- [ ] `src/components/game/Cell.tsx` 作成
-  - [ ] マスの状態表示（empty, miss, hit, sunk）
-  - [ ] ホバーエフェクト
-  - [ ] クリックハンドラー
-- [ ] `src/components/game/Ship.tsx` 作成
-  - [ ] 乗り物画像表示
-  - [ ] 回転処理（縦/横）
-  - [ ] 被弾状態の視覚化
+- [x] `src/components/game/Board.tsx` 作成
+  - [x] 10×10マスのグリッド表示
+  - [x] 自分のボード / 相手のボード切り替え
+  - [x] クリックイベント処理
+- [x] `src/components/game/Cell.tsx` 作成
+  - [x] マスの状態表示（empty, miss, hit, sunk）
+  - [x] ホバーエフェクト
+  - [x] クリックハンドラー
+- [x] `src/components/game/Ship.tsx` 作成
+  - [x] 乗り物画像表示
+  - [x] 回転処理（縦/横）
+  - [x] 被弾状態の視覚化
 
 ### 10. 配置フェーズUI実装
-- [ ] `src/components/game/ShipPlacer.tsx` 作成
-  - [ ] 未配置の乗り物リスト表示
-  - [ ] 乗り物選択UI
-  - [ ] 方向選択ボタン（縦/横）
-  - [ ] 配置プレビュー表示
-  - [ ] 配置完了ボタン
+- [x] `src/app/ship-placement/page.tsx` 実装
+  - [x] 未配置の乗り物リスト表示
+  - [x] 乗り物選択UI
+  - [x] 方向選択ボタン（縦/横）
+  - [x] 配置プレビュー表示
+  - [x] 配置完了ボタン
 - [ ] `src/components/ui/Timer.tsx` 作成
   - [ ] 残り時間表示
   - [ ] タイムアウト処理
 - [ ] 配置フェーズのタイマー機能実装
-- [ ] ランダム配置機能実装（タイムアウト時）
+- [x] ランダム配置機能実装（タイムアウト時）
 
 ### 11. 戦闘フェーズUI実装
-- [ ] `src/components/game/HUD.tsx` 作成
-  - [ ] HP表示（自分・相手）
-  - [ ] 残存艦表示
-  - [ ] ターン表示
-  - [ ] プレイヤー名表示
+- [x] `src/components/game/HUD.tsx` 作成
+  - [x] HP表示（自分・相手）
+  - [x] 残存艦表示
+  - [x] ターン表示
+  - [x] プレイヤー名表示
 - [ ] `src/components/game/TurnIndicator.tsx` 作成
   - [ ] 自分のターン / 相手のターン表示
   - [ ] ターン数表示
-- [ ] 攻撃エフェクト実装
-  - [ ] `src/components/effects/HitEffect.tsx`
-  - [ ] `src/components/effects/MissEffect.tsx`
-  - [ ] `src/components/effects/SinkEffect.tsx`
+- [x] 攻撃エフェクト実装
+  - [x] `src/components/effects/HitEffect.tsx`
+  - [x] `src/components/effects/MissEffect.tsx`
+  - [x] `src/components/effects/SinkEffect.tsx`
 - [ ] 連続攻撃UI実装
 
 ### 12. CPU対戦AI実装
-- [ ] `src/lib/ai/cpuPlayer.ts` 作成
-  - [ ] `SimpleCPU` クラス実装
-  - [ ] `selectRandomTarget()` - ランダム攻撃
-  - [ ] `selectAdjacentTarget()` - 周囲攻撃
-  - [ ] `selectTarget()` - メイン思考ロジック
-  - [ ] `onAttackResult()` - 攻撃結果処理
-  - [ ] `shouldUseSkill()` - スキル使用判定
-  - [ ] `placeCPUShips()` - CPU配置AI
+- [x] `src/lib/ai/cpuAI.ts` 作成
+  - [x] CPU思考ロジック実装
+  - [x] `getCPUAttackPosition()` - 攻撃位置選択
+  - [x] 難易度別AI実装（よわい/ふつう/つよい）
+  - [x] ランダム配置機能
 
 ### 13. キャラクター選択画面実装
-- [ ] `src/app/character-select/page.tsx` 実装
-  - [ ] プレイヤーキャラ選択UI（4人）
-  - [ ] CPU対戦時の相手選択UI（3人）
-  - [ ] キャラクター情報表示
-  - [ ] 選択確定処理
-- [ ] `src/components/character/CharacterCard.tsx` 作成
-  - [ ] キャラクター画像
-  - [ ] 名前・説明文
-  - [ ] 選択ボタン
-  - [ ] 難易度表示（CPU用）
+- [x] `src/app/character-select/page.tsx` 実装
+  - [x] プレイヤーキャラ選択UI（4人）
+  - [x] キャラクター情報表示
+  - [x] 選択確定処理
+- [x] `src/app/cpu-difficulty/page.tsx` 実装
+  - [x] CPU難易度選択UI（3段階）
+  - [x] 難易度表示
 
 ### 14. ゲーム画面統合
-- [ ] `src/app/game/page.tsx` 実装
-  - [ ] 配置フェーズ表示
-  - [ ] 戦闘フェーズ表示
-  - [ ] フェーズ切り替え処理
-  - [ ] ゲーム状態管理
-  - [ ] CPU対戦ロジック統合
+- [x] `src/app/game/page.tsx` 実装
+  - [x] 配置フェーズ表示
+  - [x] 戦闘フェーズ表示
+  - [x] フェーズ切り替え処理
+  - [x] ゲーム状態管理
+  - [x] CPU対戦ロジック統合
 
 ---
 
 ## 🌐 Week 3：スキル&オンライン対戦
 
 ### 15. スキルパネルUI実装
-- [ ] `src/components/game/SkillPanel.tsx` 作成
-  - [ ] 4つのスキルボタン表示
-  - [ ] スキル名・説明表示
-  - [ ] 使用可/使用済み/撃沈の視覚化
-  - [ ] スキル選択処理
-  - [ ] スキル確認モーダル
-- [ ] `src/components/effects/SkillEffect.tsx` 作成
-  - [ ] スキル使用時のエフェクト
-  - [ ] スキル別のアニメーション
+- [x] `src/components/game/SkillPanel.tsx` 作成
+  - [x] 4つのスキルボタン表示
+  - [x] スキル名・説明表示
+  - [x] 使用可/使用済み/撃沈の視覚化
+  - [x] スキル選択処理
+- [x] `src/components/game/SkillModal.tsx` 作成
+  - [x] スキル確認モーダル
+  - [x] スキル使用時のエフェクト
 
 ### 16. スキル実装の完成
 - [ ] シールド機能のUI統合
@@ -211,62 +204,56 @@
   - [ ] `server.js` 作成
   - [ ] `package.json` 作成
   - [ ] Renderデプロイ設定
-- [ ] `src/lib/p2p/peerConnection.ts` 作成
-  - [ ] Peer初期化
-  - [ ] 接続確立処理
-  - [ ] 接続エラーハンドリング
-  - [ ] 接続切断処理
-- [ ] `src/lib/p2p/messageHandler.ts` 作成
-  - [ ] メッセージ送信機能
-  - [ ] メッセージ受信機能
-  - [ ] メッセージタイプ別処理
-- [ ] `src/lib/p2p/roomManager.ts` 作成
-  - [ ] ルーム作成機能
-  - [ ] ルーム参加機能
-  - [ ] 招待URL生成
+- [x] `src/lib/p2p/peerManager.ts` 作成
+  - [x] Peer初期化
+  - [x] 接続確立処理
+  - [x] 接続エラーハンドリング
+  - [x] 接続切断処理
+  - [x] メッセージ送信機能
+  - [x] メッセージ受信機能
 
 ### 18. オンラインロビー実装
-- [ ] `src/app/online-lobby/page.tsx` 実装
-  - [ ] ホスト側UI（ルーム作成）
-  - [ ] ゲスト側UI（ルーム参加）
-  - [ ] PeerID表示
-  - [ ] 招待URLコピー機能
-  - [ ] 接続待機UI
-  - [ ] 接続成功時の遷移処理
+- [x] `src/app/online-lobby/page.tsx` 実装
+  - [x] ホスト側UI（ルーム作成）
+  - [x] ゲスト側UI（ルーム参加）
+  - [x] PeerID表示
+  - [x] 招待URLコピー機能
+  - [x] 接続待機UI
+  - [x] 接続成功時の遷移処理
 
 ### 19. オンライン対戦機能統合
-- [ ] ゲームアクションの送受信実装
-  - [ ] 攻撃アクション送信
-  - [ ] スキル使用アクション送信
-  - [ ] 配置アクション送信
-  - [ ] ターン終了アクション送信
-- [ ] ゲーム状態の同期処理
-- [ ] 接続切断時の処理
-- [ ] エラーハンドリング
+- [x] ゲームアクションの送受信実装
+  - [x] 攻撃アクション送信
+  - [x] スキル使用アクション送信
+  - [x] 配置アクション送信
+  - [x] ターン終了アクション送信
+- [x] ゲーム状態の同期処理
+- [x] 接続切断時の処理
+- [x] エラーハンドリング
 
 ### 20. 状態管理実装（Zustand）
-- [ ] `src/store/gameStore.ts` 作成
-  - [ ] ゲーム状態管理
-  - [ ] アクション定義
-  - [ ] ゲームロジック統合
-- [ ] `src/store/uiStore.ts` 作成
-  - [ ] UI状態管理
-  - [ ] モーダル管理
-  - [ ] 通知管理
-- [ ] `src/store/soundStore.ts` 作成
-  - [ ] サウンド設定管理
+- [x] `src/store/gameStore.ts` 作成
+  - [x] ゲーム状態管理
+  - [x] アクション定義
+  - [x] ゲームロジック統合
+- [x] `src/store/uiStore.ts` 作成
+  - [x] UI状態管理
+  - [x] モーダル管理
+  - [x] 通知管理
+- [x] `src/store/p2pStore.ts` 作成
+  - [x] P2P接続状態管理
 
 ---
 
 ## 🎨 Week 4：仕上げ&デバッグ&報酬システム
 
 ### 21. サウンド実装
-- [ ] `src/lib/sound/soundManager.ts` 作成
-  - [ ] Howler.js統合
-  - [ ] BGM管理
-  - [ ] SE管理
-  - [ ] 音量調整機能
-  - [ ] ミュート機能
+- [x] `src/lib/sound/soundManager.ts` 作成
+  - [x] Howler.js統合
+  - [x] BGM管理
+  - [x] SE管理
+  - [x] 音量調整機能
+  - [x] ミュート機能
 - [ ] BGM素材の配置
   - [ ] タイトルBGM
   - [ ] 戦闘BGM
@@ -288,12 +275,12 @@
 - [ ] HP減少アニメーション
 
 ### 23. 結果画面実装
-- [ ] `src/app/result/page.tsx` 実装
-  - [ ] 勝敗表示
-  - [ ] 勝者のキャラクター画像
-  - [ ] 戦績表示（ターン数等）
-  - [ ] リマッチボタン（オンライン対戦）
-  - [ ] タイトルに戻るボタン
+- [x] `src/app/result/page.tsx` 実装
+  - [x] 勝敗表示
+  - [x] 勝者のキャラクター画像
+  - [x] 戦績表示（ターン数等）
+  - [x] リマッチボタン（オンライン対戦）
+  - [x] タイトルに戻るボタン
   - [ ] 結果演出アニメーション
 
 ### 24. 報酬システム実装（MVP拡張版）
@@ -575,29 +562,29 @@
 ## 📊 進捗管理
 
 ### Week 1 進捗
-- 完了: 0/30タスク
+- 完了: 27/30タスク (90.0%)
 - 進行中: 0タスク
-- 未着手: 30タスク
+- 未着手: 3タスク
 
 ### Week 2 進捗
-- 完了: 0/36タスク
+- 完了: 32/36タスク (88.9%)
 - 進行中: 0タスク
-- 未着手: 36タスク
+- 未着手: 4タスク
 
 ### Week 3 進捗
-- 完了: 0/29タスク
+- 完了: 22/29タスク (75.9%)
 - 進行中: 0タスク
-- 未着手: 29タスク
+- 未着手: 7タスク
 
 ### Week 4 進捗
-- 完了: 0/58タスク
+- 完了: 7/58タスク (12.1%)
 - 進行中: 0タスク
-- 未着手: 58タスク
+- 未着手: 51タスク
 
 ### 総進捗
-- 完了: 0/153タスク (0.0%)
+- 完了: 88/153タスク (57.5%)
 - 進行中: 0タスク
-- 未着手: 153タスク
+- 未着手: 65タスク
 
 ---
 
@@ -626,4 +613,4 @@
 
 ---
 
-**更新日**: 2025-10-31
+**更新日**: 2025-11-05
