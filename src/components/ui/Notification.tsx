@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUIStore } from '@/store/uiStore';
 
@@ -9,6 +9,21 @@ import { useUIStore } from '@/store/uiStore';
 export default function Notification() {
   const notifications = useUIStore((state) => state.notifications);
   const removeNotification = useUIStore((state) => state.removeNotification);
+
+  // 自動消去タイマー
+  useEffect(() => {
+    if (notifications.length === 0) return;
+
+    const timers = notifications.map((notification) => {
+      return setTimeout(() => {
+        removeNotification(notification.id);
+      }, 5000); // 5秒後に自動消去
+    });
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [notifications, removeNotification]);
 
   const getNotificationStyle = (type: string) => {
     switch (type) {
