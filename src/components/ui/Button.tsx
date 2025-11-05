@@ -40,9 +40,20 @@ export default function Button({
     <motion.button
       className={combinedClassName}
       disabled={disabled}
-      whileHover={!disabled ? { scale: 1.05 } : {}}
-      whileTap={!disabled ? { scale: 0.95 } : {}}
-      transition={{ duration: 0.2 }}
+      whileHover={
+        !disabled
+          ? {
+              scale: 1.05,
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.2)',
+              y: -2,
+            }
+          : {}
+      }
+      whileTap={!disabled ? { scale: 0.95, y: 0 } : {}}
+      transition={{
+        duration: 0.2,
+        ease: 'easeInOut',
+      }}
       {...props}
     >
       {children}

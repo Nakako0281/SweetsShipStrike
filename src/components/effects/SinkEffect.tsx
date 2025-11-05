@@ -34,13 +34,25 @@ export default function SinkEffect({ position, onComplete }: SinkEffectProps) {
       <div className="relative">
         {/* 中心の大爆発 */}
         <motion.div
-          className="absolute w-24 h-24 bg-gradient-to-r from-red-600 to-orange-500 rounded-full"
+          className="absolute w-24 h-24 bg-gradient-to-br from-red-600 via-orange-500 to-yellow-400 rounded-full blur-md"
           style={{ left: -48, top: -48 }}
           animate={{
             scale: [0, 2.5, 0],
-            opacity: [1, 0.7, 0],
+            opacity: [1, 0.9, 0],
+            rotate: [0, 180],
           }}
-          transition={{ duration: 1 }}
+          transition={{ duration: 1, ease: 'easeOut' }}
+        />
+
+        {/* 内側の白い閃光 */}
+        <motion.div
+          className="absolute w-20 h-20 bg-white rounded-full"
+          style={{ left: -40, top: -40 }}
+          animate={{
+            scale: [0, 2, 0],
+            opacity: [1, 0.5, 0],
+          }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
         />
 
         {/* 衝撃波 */}

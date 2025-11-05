@@ -34,13 +34,13 @@ export default function HitEffect({ position, onComplete }: HitEffectProps) {
       <div className="relative">
         {/* 中心の爆発 */}
         <motion.div
-          className="absolute w-16 h-16 bg-red-500 rounded-full"
+          className="absolute w-16 h-16 bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500 rounded-full blur-sm"
           style={{ left: -32, top: -32 }}
           animate={{
             scale: [0, 2, 0],
-            opacity: [1, 0.5, 0],
+            opacity: [1, 0.8, 0],
           }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
         />
 
         {/* 外側の波紋 */}
@@ -51,7 +51,18 @@ export default function HitEffect({ position, onComplete }: HitEffectProps) {
             scale: [0, 2.5],
             opacity: [1, 0],
           }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.6, ease: 'easeOut' }}
+        />
+
+        {/* 第2波紋 */}
+        <motion.div
+          className="absolute w-24 h-24 border-2 border-red-400 rounded-full"
+          style={{ left: -48, top: -48 }}
+          animate={{
+            scale: [0, 3],
+            opacity: [0.8, 0],
+          }}
+          transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
         />
 
         {/* 火花 */}
