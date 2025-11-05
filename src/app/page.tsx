@@ -6,6 +6,8 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import { useUIStore } from '@/store/uiStore';
 import { useSound } from '@/hooks/useSound';
+import { getCoins } from '@/lib/reward/coinCalculator';
+import { motion } from 'framer-motion';
 
 /**
  * タイトル画面
@@ -21,6 +23,7 @@ import { useSound } from '@/hooks/useSound';
 export default function TitlePage() {
   const router = useRouter();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [coins, setCoins] = useState(0);
 
   // UIストア
   const isMuted = useUIStore((state) => state.isMuted);
@@ -28,6 +31,11 @@ export default function TitlePage() {
 
   // サウンド
   const { playSE, playBGM } = useSound();
+
+  // コイン読み込み
+  useEffect(() => {
+    setCoins(getCoins());
+  }, []);
 
   // BGM自動再生
   useEffect(() => {
@@ -50,8 +58,30 @@ export default function TitlePage() {
     router.push('/tutorial');
   };
 
+  const handleShop = () => {
+    playSE('button');
+    router.push('/shop');
+  };
+
+  const handleProfile = () => {
+    playSE('button');
+    router.push('/profile');
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-pink-100 to-purple-100 p-4">
+      {/* 所持コイン表示 */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full px-6 py-3 shadow-lg"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-white font-bold text-xl">{coins}</span>
+          <span className="text-white text-2xl">💰</span>
+        </div>
+      </motion.div>
+
       {/* タイトルロゴ */}
       <div className="text-center mb-12 animate-slideUp">
         <h1 className="text-6xl md:text-8xl font-bold text-pink-600 mb-4 drop-shadow-lg">
@@ -71,24 +101,23 @@ export default function TitlePage() {
           スタート
         </Button>
 
-        <Button onClick={handleTutorial} size="lg" variant="secondary">
+        <div className="grid grid-cols-2 gap-4">
+          <Button onClick={handleShop} size="md" variant="secondary">
+            🛍️ ショップ
+          </Button>
+
+          <Button onClick={handleProfile} size="md" variant="secondary">
+            👤 プロフィール
+          </Button>
+        </div>
+
+        <Button onClick={handleTutorial} size="lg" variant="ghost">
           遊び方
         </Button>
 
         <Button onClick={handleSettings} size="lg" variant="ghost">
           設定
         </Button>
-
-        {/* 将来実装予定のボタン */}
-        {/*
-        <Button onClick={handleShop} size="lg" variant="ghost">
-          ショップ
-        </Button>
-
-        <Button onClick={handleProfile} size="lg" variant="ghost">
-          プロフィール
-        </Button>
-        */}
       </div>
 
       {/* バージョン表示 */}
