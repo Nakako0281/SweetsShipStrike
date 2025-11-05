@@ -1,11 +1,18 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { motion } from 'framer-motion';
 import { useGameStore } from '@/store/gameStore';
+import CoinRewardDisplay from '@/components/reward/CoinRewardDisplay';
+import TitleUnlockModal from '@/components/reward/TitleUnlockModal';
+import { calculateCoinReward, addCoins } from '@/lib/reward/coinCalculator';
+import { updateGameStats } from '@/lib/reward/statsManager';
+import { checkTitleUnlocks } from '@/lib/reward/titleManager';
+import { TITLE_DEFINITIONS } from '@/lib/reward/definitions/titles';
 import type { GameMode } from '@/types/game';
+import type { CoinReward } from '@/types/ui';
 
 /**
  * リザルト画面
@@ -33,12 +40,43 @@ export default function ResultPage() {
   const localPlayerId = useGameStore((state) => state.localPlayerId);
   const resetGame = useGameStore((state) => state.resetGame);
 
+  // 報酬関連の状態
+  const [coinReward, setCoinReward] = useState<CoinReward | null>(null);
+  const [unlockedTitles, setUnlockedTitles] = useState<string[]>([]);
+  const [showTitleModal, setShowTitleModal] = useState(false);
+  const [currentTitleIndex, setCurrentTitleIndex] = useState(0);
+
   // パラメータバリデーション
   useEffect(() => {
     if (!mode || !result) {
       router.push('/');
     }
   }, [mode, result, router]);
+
+  // ゲーム終了時の報酬処理
+  useEffect(() => {
+    if (!gameState || !localPlayerId || !mode || !result) return;
+
+    // 統計更新
+    updateGameStats(gameState, localPlayerId, mode);
+
+    // コイン報酬計算
+    const reward = calculateCoinReward(result, gameState, mode);
+    setCoinReward(reward);
+
+    // コイン付与（勝利時のみ）
+    if (result === 'victory') {
+      addCoins(reward.totalAmount);
+    }
+
+    // 称号解放チェック
+    const newTitles = checkTitleUnlocks();
+    if (newTitles.length > 0) {
+      setUnlockedTitles(newTitles);
+      // 少し遅延してモーダル表示
+      setTimeout(() => setShowTitleModal(true), 2000);
+    }
+  }, [gameState, localPlayerId, mode, result]);
 
   const isVictory = result === 'victory';
 
@@ -80,6 +118,23 @@ export default function ResultPage() {
       router.push('/online-lobby');
     }
   };
+
+  // 称号モーダルを閉じる
+  const handleCloseTitleModal = () => {
+    if (currentTitleIndex < unlockedTitles.length - 1) {
+      // 次の称号を表示
+      setCurrentTitleIndex(currentTitleIndex + 1);
+    } else {
+      // すべての称号を表示し終えた
+      setShowTitleModal(false);
+      setCurrentTitleIndex(0);
+    }
+  };
+
+  // 現在表示中の称号
+  const currentTitle = unlockedTitles[currentTitleIndex]
+    ? TITLE_DEFINITIONS[unlockedTitles[currentTitleIndex]]
+    : null;
 
   if (!mode || !result) {
     return null;
@@ -187,18 +242,11 @@ export default function ResultPage() {
           </motion.div>
         </motion.div>
 
-        {/* 獲得コイン（MVP拡張版用、仮表示） */}
-        {isVictory && (
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="bg-gradient-to-r from-yellow-100 to-yellow-200 rounded-lg p-6 mb-8 border-2 border-yellow-400"
-          >
-            <p className="text-lg text-yellow-800 mb-2">獲得コイン</p>
-            <p className="text-4xl font-bold text-yellow-600">+100 🪙</p>
-            <p className="text-xs text-yellow-700 mt-2">※MVP拡張版で実装予定</p>
-          </motion.div>
+        {/* コイン獲得表示 */}
+        {isVictory && coinReward && (
+          <div className="mb-8">
+            <CoinRewardDisplay reward={coinReward} show={true} />
+          </div>
         )}
 
         {/* ボタン */}
@@ -241,6 +289,13 @@ export default function ResultPage() {
           ))}
         </div>
       )}
+
+      {/* 称号獲得モーダル */}
+      <TitleUnlockModal
+        isOpen={showTitleModal}
+        onClose={handleCloseTitleModal}
+        title={currentTitle}
+      />
     </div>
   );
 }
