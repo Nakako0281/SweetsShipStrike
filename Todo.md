@@ -133,10 +133,10 @@
   - [x] 方向選択ボタン（縦/横）
   - [x] 配置プレビュー表示
   - [x] 配置完了ボタン
-- [ ] `src/components/ui/Timer.tsx` 作成
-  - [ ] 残り時間表示
-  - [ ] タイムアウト処理
-- [ ] 配置フェーズのタイマー機能実装
+- [x] `src/components/ui/Timer.tsx` 作成
+  - [x] 残り時間表示
+  - [x] タイムアウト処理
+- [x] 配置フェーズのタイマー機能実装
 - [x] ランダム配置機能実装（タイムアウト時）
 
 ### 11. 戦闘フェーズUI実装
@@ -145,14 +145,14 @@
   - [x] 残存艦表示
   - [x] ターン表示
   - [x] プレイヤー名表示
-- [ ] `src/components/game/TurnIndicator.tsx` 作成
-  - [ ] 自分のターン / 相手のターン表示
-  - [ ] ターン数表示
+- [x] `src/components/game/TurnIndicator.tsx` 作成
+  - [x] 自分のターン / 相手のターン表示
+  - [x] ターン数表示
 - [x] 攻撃エフェクト実装
   - [x] `src/components/effects/HitEffect.tsx`
   - [x] `src/components/effects/MissEffect.tsx`
   - [x] `src/components/effects/SinkEffect.tsx`
-- [ ] 連続攻撃UI実装
+- [x] 連続攻撃UI実装
 
 ### 12. CPU対戦AI実装
 - [x] `src/lib/ai/cpuAI.ts` 作成
@@ -193,10 +193,10 @@
   - [x] スキル使用時のエフェクト
 
 ### 16. スキル実装の完成
-- [ ] シールド機能のUI統合
-- [ ] チョコレートボムのエリア選択UI
-- [ ] スイートエスケープの移動UI
-- [ ] 格子スキャンの結果表示UI
+- [x] シールド機能のUI統合
+- [x] チョコレートボムのエリア選択UI
+- [x] スイートエスケープの移動UI
+- [x] 格子スキャンの結果表示UI
 - [ ] スキル使用時のサウンド実装
 
 ### 17. P2P通信基盤実装

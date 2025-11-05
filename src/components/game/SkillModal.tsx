@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/ui/Button';
 import Board from '@/components/game/Board';
+import AreaPreview from '@/components/game/AreaPreview';
 import { SHIP_DEFINITIONS } from '@/lib/game/ships';
 import type { Ship, Position, InternalBoard } from '@/types/game';
 
@@ -105,13 +106,21 @@ export default function SkillModal({
                 <h3 className="text-xl font-bold text-purple-800 mb-3 text-center">
                   対象位置を選択してください
                 </h3>
-                <div className="flex justify-center">
+                <div className="flex justify-center relative">
                   <Board
                     board={opponentBoard}
                     isOpponentBoard={true}
                     onCellClick={handleCellClick}
                     disabled={false}
                   />
+                  {/* エリアプレビュー表示 */}
+                  {(skillId === 'chocolate-bomb' || skillId === 'waffle-scan') && selectedPosition && (
+                    <AreaPreview
+                      centerPosition={selectedPosition}
+                      size={3}
+                      type={skillId === 'chocolate-bomb' ? 'attack' : 'scan'}
+                    />
+                  )}
                 </div>
                 {selectedPosition && (
                   <p className="text-center mt-3 text-purple-600 font-semibold">
