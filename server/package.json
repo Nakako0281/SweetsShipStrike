@@ -1,0 +1,26 @@
+{
+  "name": "sweetsshipstrike-peerserver",
+  "version": "1.0.0",
+  "description": "PeerJS server for SweetsShipStrike online multiplayer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "peer": "^1.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "peerjs",
+    "webrtc",
+    "p2p"
+  ],
+  "author": "",
+  "license": "MIT"
+}

@@ -200,10 +200,10 @@
 - [ ] スキル使用時のサウンド実装
 
 ### 17. P2P通信基盤実装
-- [ ] PeerServerのセットアップ（Render）
-  - [ ] `server.js` 作成
-  - [ ] `package.json` 作成
-  - [ ] Renderデプロイ設定
+- [x] PeerServerのセットアップ（Render）
+  - [x] `server.js` 作成
+  - [x] `package.json` 作成
+  - [x] Renderデプロイ設定
 - [x] `src/lib/p2p/peerManager.ts` 作成
   - [x] Peer初期化
   - [x] 接続確立処理
