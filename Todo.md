@@ -286,41 +286,41 @@
 ### 24. 報酬システム実装（MVP拡張版）
 
 #### 24.1 コイン獲得システム
-- [ ] `src/lib/reward/coinCalculator.ts` 作成
-  - [ ] `calculateCoinReward()` - コイン報酬計算
-  - [ ] 基本報酬計算
-  - [ ] ボーナス報酬計算（オンライン/速攻/完全勝利/逆転/全スキル）
-  - [ ] `addCoins()` - コイン付与
-  - [ ] `spendCoins()` - コイン消費
+- [x] `src/lib/reward/coinCalculator.ts` 作成
+  - [x] `calculateCoinReward()` - コイン報酬計算
+  - [x] 基本報酬計算
+  - [x] ボーナス報酬計算（オンライン/速攻/完全勝利/逆転/全スキル）
+  - [x] `addCoins()` - コイン付与
+  - [x] `spendCoins()` - コイン消費
 
 #### 24.2 称号システム
-- [ ] `src/lib/reward/titleManager.ts` 作成
-  - [ ] `unlockTitle()` - 称号解放
-  - [ ] `equipTitle()` - 称号装備
-  - [ ] `checkTitleUnlocks()` - 称号解放チェック
-- [ ] `src/lib/reward/definitions/titles.ts` 作成
-  - [ ] MVP版称号定義（「初勝利」）
-  - [ ] 将来実装用の拡張可能な設計
+- [x] `src/lib/reward/titleManager.ts` 作成
+  - [x] `unlockTitle()` - 称号解放
+  - [x] `equipTitle()` - 称号装備
+  - [x] `checkTitleUnlocks()` - 称号解放チェック
+- [x] `src/lib/reward/definitions/titles.ts` 作成
+  - [x] MVP版称号定義（「初勝利」）
+  - [x] 将来実装用の拡張可能な設計
 
 #### 24.3 ショップシステム
-- [ ] `src/lib/reward/shopManager.ts` 作成
-  - [ ] `purchaseSkin()` - スキン購入
-  - [ ] `equipSkin()` - スキン装備
-  - [ ] `getShopItems()` - ショップアイテム一覧取得
-- [ ] `src/lib/reward/definitions/skins.ts` 作成
-  - [ ] MVP版スキン定義（サマーバージョン1つ）
-  - [ ] デフォルトスキン定義
+- [x] `src/lib/reward/shopManager.ts` 作成
+  - [x] `purchaseSkin()` - スキン購入
+  - [x] `equipSkin()` - スキン装備
+  - [x] `getShopItems()` - ショップアイテム一覧取得
+- [x] `src/lib/reward/definitions/skins.ts` 作成
+  - [x] MVP版スキン定義（サマーバージョン1つ）
+  - [x] デフォルトスキン定義
 
 #### 24.4 統計管理
-- [ ] `src/lib/reward/statsManager.ts` 作成
-  - [ ] `updateGameStats()` - 統計更新
-  - [ ] `checkPerfectWin()` - 完全勝利判定
-  - [ ] `checkAllSkillsUsed()` - 全スキル使用判定
-  - [ ] `checkComebackWin()` - 逆転勝利判定
-  - [ ] `loadPlayerStats()` - 統計読み込み
-  - [ ] `savePlayerStats()` - 統計保存
-  - [ ] `createDefaultPlayerStats()` - デフォルト統計作成
-  - [ ] `resetPlayerStats()` - 統計リセット（デバッグ用）
+- [x] `src/lib/reward/statsManager.ts` 作成
+  - [x] `updateGameStats()` - 統計更新
+  - [x] `checkPerfectWin()` - 完全勝利判定
+  - [x] `checkAllSkillsUsed()` - 全スキル使用判定
+  - [x] `checkComebackWin()` - 逆転勝利判定
+  - [x] `loadPlayerStats()` - 統計読み込み
+  - [x] `savePlayerStats()` - 統計保存
+  - [x] `createDefaultPlayerStats()` - デフォルト統計作成
+  - [x] `resetPlayerStats()` - 統計リセット（デバッグ用）
 
 #### 24.5 ゲーム終了処理統合
 - [ ] `onGameFinished()` 実装
