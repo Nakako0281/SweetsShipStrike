@@ -79,3 +79,71 @@ body {
 .animate-slideUp {
   animation: slideUp 0.3s ease-in-out;
 }
+
+/* ========================================
+ * レスポンシブ対応
+ * ======================================== */
+
+/* タッチデバイス用のタップエリア最適化 */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  a,
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  /* ゲームボードのサイズ調整 */
+  .game-board {
+    max-width: 100%;
+    aspect-ratio: 1;
+  }
+}
+
+/* タブレット対応 */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .game-board {
+    max-width: 90vmin;
+  }
+}
+
+/* PC対応 */
+@media (min-width: 1025px) {
+  .game-board {
+    max-width: 600px;
+  }
+}
+
+/* 横向き推奨（モバイル） */
+@media (max-width: 768px) and (orientation: portrait) {
+  .landscape-recommended {
+    display: block;
+  }
+}
+
+/* タッチ操作の視覚フィードバック */
+.touch-feedback {
+  -webkit-tap-highlight-color: rgba(236, 72, 153, 0.3);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
